@@ -34,37 +34,54 @@ export default function ClientsNewForm({ createClient }: ClientsNewFormProps) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-slate-900">Новый клиент</h1>
+    <div className="max-w-3xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
+      <div className="space-y-1 mb-2">
+        <h1 className="text-xl md:text-2xl font-semibold text-slate-900">
+          Создание клиента
+        </h1>
+        <p className="text-sm text-slate-500">
+          Основные данные клиента для ведения проектов и отчетов.
+        </p>
       </div>
 
       <Card>
         <CardTitle className="mb-3">Данные клиента</CardTitle>
         <CardContent>
-          <form action={handleAction} className="space-y-4 max-w-xl">
-            <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
-                Имя клиента
-              </label>
-              <Input name="name" placeholder="Анна" required />
+          <form action={handleAction} className="space-y-5 max-w-xl">
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Имя контакта
+                </label>
+                <Input
+                  name="name"
+                  placeholder="Например, Иван Петров"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Компания
+                </label>
+                <Input name="company" placeholder="ООО Ромашка" />
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
-                Компания
-              </label>
-              <Input name="company" placeholder="Acme Store" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
-                Email
-              </label>
-              <Input
-                type="email"
-                name="email"
-                placeholder="client@company.com"
-                required
-              />
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Email
+                </label>
+                <Input
+                  type="email"
+                  name="email"
+                  placeholder="client@example.com"
+                  required
+                />
+              </div>
+              <p className="text-xs text-slate-500">
+                Контактные данные используются только для работы с отчетами и не передаются третьим лицам.
+              </p>
             </div>
 
             <div className="space-y-2">

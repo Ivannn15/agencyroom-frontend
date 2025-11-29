@@ -28,18 +28,23 @@ export default function ProjectEditForm({
   };
 
   return (
-    <form action={handleAction} className="space-y-4">
+    <form action={handleAction} className="space-y-6">
       <div className="grid gap-4 max-w-xl">
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             Название проекта
           </label>
-          <Input name="name" defaultValue={project.name} required />
+          <Input
+            name="name"
+            defaultValue={project.name}
+            placeholder="Например, Контекстная реклама для ООО Ромашка"
+            required
+          />
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">
-            Клиент
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            Клиент проекта
           </label>
           <select
             name="clientId"
@@ -56,7 +61,7 @@ export default function ProjectEditForm({
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             Статус
           </label>
           <select
@@ -68,10 +73,13 @@ export default function ProjectEditForm({
             <option value="paused">Пауза</option>
             <option value="completed">Завершен</option>
           </select>
+          <p className="text-xs text-slate-500 mt-1">
+            Статус помогает ориентироваться в текущем состоянии проекта в списке.
+          </p>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             Заметки
           </label>
           <textarea

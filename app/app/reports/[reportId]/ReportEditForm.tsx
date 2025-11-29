@@ -34,19 +34,19 @@ export default function ReportEditForm({ report, updateReport }: ReportEditFormP
     <form action={handleAction} className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 max-w-3xl">
         <div className="md:col-span-2">
-          <label className="block text-xs font-medium text-slate-700 mb-1">
-            Период
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            Период отчета
           </label>
           <Input
             name="period"
             defaultValue={report.period}
-            placeholder="Декабрь 2024"
+            placeholder="Например, сентябрь 2025 или 01.09.2025–30.09.2025"
             required
           />
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             Расход
           </label>
           <Input
@@ -59,7 +59,7 @@ export default function ReportEditForm({ report, updateReport }: ReportEditFormP
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             Выручка
           </label>
           <Input
@@ -72,7 +72,7 @@ export default function ReportEditForm({ report, updateReport }: ReportEditFormP
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             Лиды
           </label>
           <Input
@@ -85,7 +85,7 @@ export default function ReportEditForm({ report, updateReport }: ReportEditFormP
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             CPA
           </label>
           <Input
@@ -98,7 +98,7 @@ export default function ReportEditForm({ report, updateReport }: ReportEditFormP
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             ROAS
           </label>
           <Input
@@ -110,25 +110,34 @@ export default function ReportEditForm({ report, updateReport }: ReportEditFormP
           />
         </div>
       </div>
+      <p className="text-xs text-slate-500 max-w-3xl">
+        Числовые показатели используются для краткого KPI-блока, который видит клиент в отчете.
+      </p>
 
       <div className="grid gap-4 max-w-3xl">
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             Краткое резюме
           </label>
+          <p className="text-xs text-slate-500 mb-2">
+            Это первый блок, который читает клиент — опишите самое важное простым языком.
+          </p>
           <textarea
             name="summary"
             defaultValue={report.summary}
-            placeholder="Охват +54%, стабильный CTR..."
+            placeholder="1–2 абзаца о ключевых результатах за период."
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 min-h-[80px]"
             required
           />
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             Что делали (по одному пункту в строке)
           </label>
+          <p className="text-xs text-slate-500 mb-2">
+            Перечислите основные действия за период — каждое с новой строки.
+          </p>
           <textarea
             name="whatWasDone"
             defaultValue={whatWasDoneText}
@@ -140,9 +149,12 @@ export default function ReportEditForm({ report, updateReport }: ReportEditFormP
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             Выводы и план (по одному пункту в строке)
           </label>
+          <p className="text-xs text-slate-500 mb-2">
+            Опишите план на следующий период: что будете тестировать и улучшать.
+          </p>
           <textarea
             name="nextPlan"
             defaultValue={nextPlanText}

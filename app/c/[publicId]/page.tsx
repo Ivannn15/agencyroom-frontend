@@ -34,59 +34,68 @@ export default async function PublicReportPage({ params }: PublicReportPageProps
     : null;
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 py-10 bg-slate-50">
-      <div className="max-w-4xl w-full bg-white rounded-2xl shadow-sm p-6 space-y-6">
-        <div>
-          <h1 className="text-xl font-semibold text-slate-900">{project?.name || "Отчет"}</h1>
-          <p className="text-sm text-slate-500">
-            Клиент: {client?.company || client?.name || ""} · Период: {report.period}
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-3xl mx-auto px-4 md:px-6 py-8 md:py-10 space-y-6 md:space-y-8">
+        <header className="space-y-2 text-center md:text-left">
+          <p className="text-xs uppercase tracking-wide text-slate-500">
+            Отчет по рекламе
           </p>
-        </div>
+          <h1 className="text-2xl md:text-3xl font-semibold text-slate-900">
+            {project?.name || "Отчет"}
+          </h1>
+          <p className="text-sm text-slate-500">
+            Клиент: {client?.company || client?.name || ""}
+            {report.period && <> · Период: {report.period}</>}
+          </p>
+        </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100">
+        <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="bg-white rounded-2xl shadow-sm p-4">
             <div className="text-xs text-slate-500 mb-1">ROAS</div>
-            <div className="text-2xl font-semibold">
+            <div className="text-2xl font-semibold text-slate-900">
               {report.roas != null ? report.roas.toFixed(1) : "—"}
             </div>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100">
+          <div className="bg-white rounded-2xl shadow-sm p-4">
             <div className="text-xs text-slate-500 mb-1">Расход</div>
-            <div className="text-2xl font-semibold">
+            <div className="text-2xl font-semibold text-slate-900">
               {report.spend != null ? report.spend.toLocaleString("ru-RU") + " ₽" : "—"}
             </div>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100">
+          <div className="bg-white rounded-2xl shadow-sm p-4">
             <div className="text-xs text-slate-500 mb-1">Выручка</div>
-            <div className="text-2xl font-semibold">
+            <div className="text-2xl font-semibold text-slate-900">
               {report.revenue != null
                 ? report.revenue.toLocaleString("ru-RU") + " ₽"
                 : "—"}
             </div>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100">
+          <div className="bg-white rounded-2xl shadow-sm p-4">
             <div className="text-xs text-slate-500 mb-1">Лиды</div>
-            <div className="text-2xl font-semibold">
+            <div className="text-2xl font-semibold text-slate-900">
               {report.leads != null ? report.leads.toLocaleString("ru-RU") : "—"}
             </div>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100">
+          <div className="bg-white rounded-2xl shadow-sm p-4">
             <div className="text-xs text-slate-500 mb-1">CPA</div>
-            <div className="text-2xl font-semibold">
+            <div className="text-2xl font-semibold text-slate-900">
               {report.cpa != null ? report.cpa.toLocaleString("ru-RU") + " ₽" : "—"}
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="space-y-4">
-          <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100">
-            <h2 className="text-sm font-semibold text-slate-900 mb-3">Краткое резюме</h2>
+        <section className="space-y-6">
+          <div className="bg-white rounded-2xl shadow-sm p-4">
+            <h2 className="text-sm font-semibold text-slate-900 mb-1">Краткое резюме</h2>
+            <p className="text-xs text-slate-500 mb-2">
+              Основные выводы по результатам периода в одном блоке.
+            </p>
             <p className="text-sm text-slate-700">{report.summary}</p>
           </div>
 
           {whatWasDone && whatWasDone.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100">
-              <h2 className="text-sm font-semibold text-slate-900 mb-3">Что делали</h2>
+            <div className="bg-white rounded-2xl shadow-sm p-4">
+              <h2 className="text-sm font-semibold text-slate-900 mb-2">Что делали</h2>
               <ul className="list-disc pl-5 space-y-1 text-sm text-slate-700">
                 {whatWasDone.map((item, idx) => (
                   <li key={idx}>{item}</li>
@@ -96,8 +105,8 @@ export default async function PublicReportPage({ params }: PublicReportPageProps
           )}
 
           {nextPlan && nextPlan.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100">
-              <h2 className="text-sm font-semibold text-slate-900 mb-3">Выводы и план</h2>
+            <div className="bg-white rounded-2xl shadow-sm p-4">
+              <h2 className="text-sm font-semibold text-slate-900 mb-2">Выводы и план</h2>
               <ul className="list-disc pl-5 space-y-1 text-sm text-slate-700">
                 {nextPlan.map((item, idx) => (
                   <li key={idx}>{item}</li>
@@ -107,8 +116,8 @@ export default async function PublicReportPage({ params }: PublicReportPageProps
           )}
 
           {project && (
-            <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100">
-              <h2 className="text-sm font-semibold text-slate-900 mb-3">
+            <div className="bg-white rounded-2xl shadow-sm p-4">
+              <h2 className="text-sm font-semibold text-slate-900 mb-2">
                 Информация о проекте
               </h2>
               <p className="text-sm text-slate-700">Проект: {project.name}</p>
@@ -121,8 +130,8 @@ export default async function PublicReportPage({ params }: PublicReportPageProps
               </p>
             </div>
           )}
-        </div>
+        </section>
       </div>
-    </main>
+    </div>
   );
 }

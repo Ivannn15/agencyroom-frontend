@@ -22,33 +22,46 @@ export default function ClientEditForm({ client, updateClient }: ClientEditFormP
   };
 
   return (
-    <form action={handleAction} className="space-y-4">
+    <form action={handleAction} className="space-y-6">
       <div className="grid gap-4 max-w-md">
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             Имя контакта
           </label>
-          <Input name="name" defaultValue={client.name} required />
+          <Input
+            name="name"
+            defaultValue={client.name}
+            placeholder="Например, Иван Петров"
+            required
+          />
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             Компания
           </label>
-          <Input name="company" defaultValue={client.company ?? ""} />
+          <Input
+            name="company"
+            defaultValue={client.company ?? ""}
+            placeholder="ООО Ромашка"
+          />
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             Email
           </label>
           <Input
             name="email"
             type="email"
             defaultValue={client.contactEmail}
+            placeholder="client@example.com"
             required
           />
         </div>
+        <p className="text-xs text-slate-500">
+          Контактные данные используются только для работы с отчетами и не передаются третьим лицам.
+        </p>
       </div>
 
       <Button type="submit" disabled={isPending}>

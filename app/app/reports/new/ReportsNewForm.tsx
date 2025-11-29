@@ -61,18 +61,21 @@ export default function ReportsNewForm({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-slate-900">Новый отчет</h1>
+    <div className="max-w-3xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
+      <div className="space-y-1">
+        <h1 className="text-xl md:text-2xl font-semibold text-slate-900">Новый отчет</h1>
+        <p className="text-sm text-slate-500">
+          Укажите период, ключевые показатели и краткое резюме для клиента.
+        </p>
       </div>
 
       <Card>
         <CardTitle className="mb-3">Данные отчета</CardTitle>
         <CardContent>
-          <form action={handleAction} className="space-y-4 max-w-2xl">
+          <form action={handleAction} className="space-y-5 max-w-2xl">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Клиент
                 </label>
                 <select
@@ -90,7 +93,7 @@ export default function ReportsNewForm({
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Проект
                 </label>
                 <select
@@ -111,66 +114,75 @@ export default function ReportsNewForm({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
-                Период
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Период отчета
               </label>
               <Input
                 name="period"
                 defaultValue=""
-                placeholder="Январь 2025"
+                placeholder="Например, сентябрь 2025 или 01.09.2025–30.09.2025"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Краткое резюме
               </label>
+              <p className="text-xs text-slate-500 mb-2">
+                Это первый блок, который читает клиент — опишите самое важное простым языком.
+              </p>
               <textarea
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white min-h-[120px]"
                 name="summary"
-                placeholder="Ключевые результаты кампании"
+                placeholder="1–2 абзаца о ключевых результатах за период."
                 required
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Расход
                 </label>
                 <Input type="number" name="spend" placeholder="120000" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Выручка
                 </label>
                 <Input type="number" name="revenue" placeholder="300000" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Лиды
                 </label>
                 <Input type="number" name="leads" placeholder="120" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   CPA
                 </label>
                 <Input type="number" name="cpa" placeholder="600" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   ROAS
                 </label>
                 <Input type="number" name="roas" placeholder="3.5" />
               </div>
             </div>
+            <p className="text-xs text-slate-500">
+              Числовые показатели используются для краткого KPI-блока, который видит клиент в отчете.
+            </p>
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Что делали (по одному пункту в строке)
               </label>
+              <p className="text-xs text-slate-500 mb-2">
+                Перечислите основные действия за период — каждое с новой строки.
+              </p>
               <textarea
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white min-h-[120px]"
                 name="whatWasDone"
@@ -179,9 +191,12 @@ export default function ReportsNewForm({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Выводы и план (по одному пункту в строке)
               </label>
+              <p className="text-xs text-slate-500 mb-2">
+                Опишите план на следующий период: что будете тестировать и улучшать.
+              </p>
               <textarea
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white min-h-[120px]"
                 name="nextPlan"

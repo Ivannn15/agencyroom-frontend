@@ -32,10 +32,15 @@ export default async function ProjectEditPage({ params }: ProjectEditPageProps) 
   const updateProjectAction = updateProject.bind(null, project.id);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-semibold text-slate-900">
-        Редактировать проект
-      </h1>
+    <div className="max-w-3xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
+      <div className="space-y-1">
+        <h1 className="text-xl md:text-2xl font-semibold text-slate-900">
+          Редактирование проекта
+        </h1>
+        <p className="text-sm text-slate-500">
+          Измените статус и описание проекта для актуальной картины.
+        </p>
+      </div>
 
       <ProjectEditForm
         project={project}

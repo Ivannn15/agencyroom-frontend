@@ -44,18 +44,21 @@ export default function ProjectsNewForm({ clients, createProject, initialClientI
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-slate-900">Новый проект</h1>
+    <div className="max-w-3xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6">
+      <div className="space-y-1">
+        <h1 className="text-xl md:text-2xl font-semibold text-slate-900">Новый проект</h1>
+        <p className="text-sm text-slate-500">
+          Проект привязывается к клиенту и будет использоваться в отчетах.
+        </p>
       </div>
 
       <Card>
         <CardTitle className="mb-3">Данные проекта</CardTitle>
         <CardContent>
-          <form action={handleAction} className="space-y-4 max-w-xl">
+          <form action={handleAction} className="space-y-5 max-w-xl">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
-                Клиент
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Клиент проекта
               </label>
               <select
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white"
@@ -73,17 +76,17 @@ export default function ProjectsNewForm({ clients, createProject, initialClientI
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Название проекта
               </label>
               <Input
                 name="name"
-                placeholder="Performance для Acme"
+                placeholder="Например, Контекстная реклама для ООО Ромашка"
                 required
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Статус
               </label>
               <select
@@ -98,12 +101,18 @@ export default function ProjectsNewForm({ clients, createProject, initialClientI
                   </option>
                 ))}
               </select>
+              <p className="text-xs text-slate-500 mt-1">
+                Статус помогает ориентироваться в текущем состоянии проекта в списке.
+              </p>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Заметки
               </label>
-              <Input name="notes" placeholder="Что делаем в этом месяце" />
+              <Input
+                name="notes"
+                placeholder="Краткий контекст по проекту или ближайшие задачи"
+              />
             </div>
 
             <div className="space-y-2">
