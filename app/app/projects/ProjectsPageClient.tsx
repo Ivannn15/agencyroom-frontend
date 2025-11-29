@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Button } from "../../../components/ui/Button";
+import { EmptyState } from "../../../components/ui/EmptyState";
 
 const statusOptions = [
   { value: "all", label: "Все статусы" },
@@ -78,9 +79,14 @@ export default function ProjectsPageClient({
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-slate-900">Проекты</h1>
+    <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div className="space-y-1">
+          <h1 className="text-xl md:text-2xl font-semibold text-slate-900">Проекты</h1>
+          <p className="text-sm text-slate-500">
+            Контролируйте активные проекты и фильтруйте их по статусу и клиенту.
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -145,57 +151,69 @@ export default function ProjectsPageClient({
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs text-slate-500 border-b">
-                <th className="py-2 pr-4">Проект</th>
-                <th className="py-2 pr-4">Клиент</th>
-                <th className="py-2 pr-4">Статус</th>
-                <th className="py-2 pr-4 text-right">Действия</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredProjects.map((project) => {
-                const client = clientsById.get(project.clientId);
-                return (
-                  <tr
-                    key={project.id}
-                    className="border-b last:border-0 hover:bg-slate-50"
-                  >
-                    <td className="py-2 pr-4">{project.name}</td>
-                    <td className="py-2 pr-4">
-                      {client
-                        ? client.company || client.name
-                        : "Неизвестный клиент"}
-                    </td>
-                    <td className="py-2 pr-4">
-                      <span
-                        className={`inline-flex items-center rounded-full border px-2 py-1 text-xs font-medium ${statusBadgeStyles[project.status]}`}
-                      >
-                        {getStatusLabel(project.status)}
-                      </span>
-                    </td>
-                    <td className="py-2 pr-4 text-right">
-                      <Link
-                        href={`/app/projects/${project.id}`}
-                        className="text-xs px-3 py-1 rounded-full border border-sky-200 text-sky-700 hover:bg-sky-50"
-                      >
-                        Открыть
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        {projects.length === 0 ? (
+          <EmptyState
+            title="Проектов пока нет"
+            description="Создайте первый проект и привяжите его к клиенту."
+            action={
+              <Link href="/app/projects/new">
+                <Button className="px-3 py-2 text-sm">Создать проект</Button>
+              </Link>
+            }
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-slate-500 border-b">
+                  <th className="py-2 pr-4">Проект</th>
+                  <th className="py-2 pr-4">Клиент</th>
+                  <th className="py-2 pr-4">Статус</th>
+                  <th className="py-2 pr-4 text-right">Действия</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredProjects.map((project) => {
+                  const client = clientsById.get(project.clientId);
+                  return (
+                    <tr
+                      key={project.id}
+                      className="border-b last:border-0 hover:bg-slate-50"
+                    >
+                      <td className="py-2 pr-4">{project.name}</td>
+                      <td className="py-2 pr-4">
+                        {client
+                          ? client.company || client.name
+                          : "Неизвестный клиент"}
+                      </td>
+                      <td className="py-2 pr-4">
+                        <span
+                          className={`inline-flex items-center rounded-full border px-2 py-1 text-xs font-medium ${statusBadgeStyles[project.status]}`}
+                        >
+                          {getStatusLabel(project.status)}
+                        </span>
+                      </td>
+                      <td className="py-2 pr-4 text-right">
+                        <Link
+                          href={`/app/projects/${project.id}`}
+                          className="text-xs px-3 py-1 rounded-full border border-sky-200 text-sky-700 hover:bg-sky-50"
+                        >
+                          Открыть
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
 
-          {filteredProjects.length === 0 && (
-            <div className="py-4 text-xs text-slate-500">
-              По выбранным фильтрам проекты не найдены.
-            </div>
-          )}
-        </div>
+            {filteredProjects.length === 0 && (
+              <div className="py-4 text-xs text-slate-500">
+                По выбранным фильтрам проекты не найдены.
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

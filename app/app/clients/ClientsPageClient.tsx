@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
 import { Card, CardTitle } from "../../../components/ui/Card";
+import { EmptyState } from "../../../components/ui/EmptyState";
 
 type ClientForUi = {
   id: string;
@@ -51,9 +52,14 @@ export default function ClientsPageClient({ initialClients }: ClientsPageClientP
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-slate-900">Клиенты</h1>
+    <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div className="space-y-1">
+          <h1 className="text-xl md:text-2xl font-semibold text-slate-900">Клиенты</h1>
+          <p className="text-sm text-slate-500">
+            Управляйте контактами клиентов и создавайте проекты для отчетов.
+          </p>
+        </div>
         <Button variant="outline" onClick={() => router.push("/app/clients/new")}>
           + New client
         </Button>
@@ -107,45 +113,52 @@ export default function ClientsPageClient({ initialClients }: ClientsPageClientP
 
       <Card>
         <CardTitle className="mb-3">Список клиентов</CardTitle>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs text-slate-500 border-b">
-                <th className="py-2 pr-4">Клиент</th>
-                <th className="py-2 pr-4">Компания</th>
-                <th className="py-2 pr-4">Email</th>
-                <th className="py-2 pr-4">Добавлен</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clients.map((client) => (
-                <tr
-                  key={client.id}
-                  className="border-b last:border-0 hover:bg-slate-50"
-                >
-                  <td className="py-2 pr-4">
-                    <Link
-                      href={`/app/clients/${client.id}`}
-                      className="text-sky-700 hover:underline"
-                    >
-                      {client.name}
-                    </Link>
-                  </td>
-                  <td className="py-2 pr-4">
-                    {client.company || <span className="text-slate-400">—</span>}
-                  </td>
-                  <td className="py-2 pr-4">{client.contactEmail}</td>
-                  <td className="py-2 pr-4">{client.createdAt}</td>
+        {clients.length === 0 ? (
+          <EmptyState
+            title="У вас пока нет клиентов"
+            description="Добавьте первого клиента, чтобы начать вести проекты и отчеты по ним."
+            action={
+              <Link href="/app/clients/new">
+                <Button className="px-3 py-2 text-sm">Добавить клиента</Button>
+              </Link>
+            }
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-slate-500 border-b">
+                  <th className="py-2 pr-4">Клиент</th>
+                  <th className="py-2 pr-4">Компания</th>
+                  <th className="py-2 pr-4">Email</th>
+                  <th className="py-2 pr-4">Добавлен</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          {clients.length === 0 && (
-            <div className="py-4 text-xs text-slate-500">
-              Пока нет клиентов. Добавьте первого с помощью формы выше.
-            </div>
-          )}
-        </div>
+              </thead>
+              <tbody>
+                {clients.map((client) => (
+                  <tr
+                    key={client.id}
+                    className="border-b last:border-0 hover:bg-slate-50"
+                  >
+                    <td className="py-2 pr-4">
+                      <Link
+                        href={`/app/clients/${client.id}`}
+                        className="text-sky-700 hover:underline"
+                      >
+                        {client.name}
+                      </Link>
+                    </td>
+                    <td className="py-2 pr-4">
+                      {client.company || <span className="text-slate-400">—</span>}
+                    </td>
+                    <td className="py-2 pr-4">{client.contactEmail}</td>
+                    <td className="py-2 pr-4">{client.createdAt}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Card>
     </div>
   );
