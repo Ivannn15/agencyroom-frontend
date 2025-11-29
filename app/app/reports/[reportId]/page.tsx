@@ -50,12 +50,16 @@ export default async function ReportDetailsPage({ params }: ReportPageProps) {
   return (
     <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
-        <div className="space-y-1">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-2 text-xs text-slate-500">
+            <span className="rounded-full bg-slate-100 px-2 py-1">Отчет</span>
+            <span>Период: {report.period}</span>
+          </div>
           <h1 className="text-xl md:text-2xl font-semibold text-slate-900">
             {report.project?.name || "Отчет"}
           </h1>
           <p className="text-sm text-slate-500">
-            Клиент: {clientName} · Период: {report.period}
+            Клиент: {clientName}
           </p>
         </div>
         <div className="flex flex-col gap-2 items-start md:items-end">
@@ -95,19 +99,19 @@ export default async function ReportDetailsPage({ params }: ReportPageProps) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <div className="bg-white rounded-2xl shadow-sm p-4">
+        <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100 transition hover:-translate-y-0.5 hover:shadow-md">
           <div className="text-xs text-slate-500 mb-1">ROAS</div>
           <div className="text-2xl font-semibold text-slate-900">
             {report.roas != null ? report.roas.toFixed(1) : "—"}
           </div>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm p-4">
+        <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100 transition hover:-translate-y-0.5 hover:shadow-md">
           <div className="text-xs text-slate-500 mb-1">Расход</div>
           <div className="text-2xl font-semibold text-slate-900">
             {report.spend != null ? report.spend.toLocaleString("ru-RU") + " ₽" : "—"}
           </div>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm p-4">
+        <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100 transition hover:-translate-y-0.5 hover:shadow-md">
           <div className="text-xs text-slate-500 mb-1">Выручка</div>
           <div className="text-2xl font-semibold text-slate-900">
             {report.revenue != null
@@ -115,13 +119,13 @@ export default async function ReportDetailsPage({ params }: ReportPageProps) {
               : "—"}
           </div>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm p-4">
+        <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100 transition hover:-translate-y-0.5 hover:shadow-md">
           <div className="text-xs text-slate-500 mb-1">Лиды</div>
           <div className="text-2xl font-semibold text-slate-900">
             {report.leads != null ? report.leads.toLocaleString("ru-RU") : "—"}
           </div>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm p-4">
+        <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100 transition hover:-translate-y-0.5 hover:shadow-md">
           <div className="text-xs text-slate-500 mb-1">CPA</div>
           <div className="text-2xl font-semibold text-slate-900">
             {report.cpa != null ? report.cpa.toLocaleString("ru-RU") + " ₽" : "—"}
@@ -130,7 +134,7 @@ export default async function ReportDetailsPage({ params }: ReportPageProps) {
       </div>
 
       <div className="space-y-6">
-        <div className="bg-white rounded-2xl shadow-sm p-4">
+        <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100">
           <h2 className="text-sm font-semibold text-slate-900 mb-3">
             Краткое резюме
           </h2>
@@ -138,7 +142,7 @@ export default async function ReportDetailsPage({ params }: ReportPageProps) {
         </div>
 
         {whatWasDone && whatWasDone.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-sm p-4">
+          <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100 transition hover:-translate-y-0.5 hover:shadow-md">
             <h2 className="text-sm font-semibold text-slate-900 mb-3">
               Что делали
             </h2>
@@ -151,7 +155,7 @@ export default async function ReportDetailsPage({ params }: ReportPageProps) {
         )}
 
         {nextPlan && nextPlan.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-sm p-4">
+          <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100 transition hover:-translate-y-0.5 hover:shadow-md">
             <h2 className="text-sm font-semibold text-slate-900 mb-3">
               Выводы и план
             </h2>
@@ -164,7 +168,7 @@ export default async function ReportDetailsPage({ params }: ReportPageProps) {
         )}
 
         {report.project && (
-          <div className="bg-white rounded-2xl shadow-sm p-4">
+          <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100">
             <h2 className="text-sm font-semibold text-slate-900 mb-3">
               Информация о проекте
             </h2>

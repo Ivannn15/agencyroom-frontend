@@ -9,7 +9,8 @@ type AlertProps = {
   variant?: AlertVariant;
 };
 
-const baseClasses = "rounded-lg border px-3 py-2 text-xs md:text-sm";
+const baseClasses =
+  "rounded-lg border px-3 py-2 text-xs md:text-sm shadow-sm";
 
 const variants: Record<AlertVariant, string> = {
   info: "border-sky-200 bg-sky-50 text-sky-800",

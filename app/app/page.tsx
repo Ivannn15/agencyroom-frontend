@@ -19,31 +19,44 @@ export default async function AppDashboardPage() {
   const reportsCount = await prisma.report.count();
 
   return (
-    <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
-      <h1 className="text-xl md:text-2xl font-semibold text-slate-900">
-        Обзор агентства
-      </h1>
+    <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-8">
+      <div className="flex flex-col gap-1">
+        <p className="text-xs uppercase tracking-wide text-slate-500">AgencyRoom</p>
+        <h1 className="text-xl md:text-2xl font-semibold text-slate-900">
+          Обзор агентства
+        </h1>
+        <p className="text-sm text-slate-500">
+          Быстрый взгляд на клиентов, проекты и последние отчеты.
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl shadow-sm p-4">
-          <div className="text-xs text-slate-500 mb-1">Клиенты</div>
-          <div className="text-2xl font-semibold">{clientsCount}</div>
+        <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100 transition hover:-translate-y-0.5 hover:shadow-md">
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-slate-500">Клиенты</div>
+            <span className="text-lg">👥</span>
+          </div>
+          <div className="text-3xl font-semibold mt-1 text-slate-900">{clientsCount}</div>
           <div className="text-xs text-slate-400 mt-1">
             Активных в системе
           </div>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm p-4">
-          <div className="text-xs text-slate-500 mb-1">Активные проекты</div>
-          <div className="text-2xl font-semibold">{activeProjects}</div>
+        <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100 transition hover:-translate-y-0.5 hover:shadow-md">
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-slate-500">Активные проекты</div>
+            <span className="text-lg">🚀</span>
+          </div>
+          <div className="text-3xl font-semibold mt-1 text-slate-900">{activeProjects}</div>
           <div className="text-xs text-slate-400 mt-1">
             В работе прямо сейчас
           </div>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm p-4">
-          <div className="text-xs text-slate-500 mb-1">
-            Отчетов за последний период
+        <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100 transition hover:-translate-y-0.5 hover:shadow-md">
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-slate-500">Отчеты за период</div>
+            <span className="text-lg">📊</span>
           </div>
-          <div className="text-2xl font-semibold">{reportsCount}</div>
+          <div className="text-3xl font-semibold mt-1 text-slate-900">{reportsCount}</div>
           <div className="text-xs text-slate-400 mt-1">
             Готово к отправке клиентам
           </div>
@@ -60,7 +73,7 @@ export default async function AppDashboardPage() {
           {reports.map((report) => (
             <div
               key={report.id}
-              className="py-3 flex items-start justify-between gap-4"
+              className="py-3 flex items-start justify-between gap-4 transition hover:bg-slate-50 rounded-lg px-2 -mx-2"
             >
               <div>
                 <div className="font-medium text-slate-900">

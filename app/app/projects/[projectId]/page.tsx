@@ -49,10 +49,14 @@ export default async function ProjectDetailsPage({ params, searchParams }: Proje
         </Alert>
       )}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
-        <div className="space-y-1">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-2 text-xs text-slate-500">
+            <span className="rounded-full bg-slate-100 px-2 py-1">Проект</span>
+            <span>Статус: {statusLabel}</span>
+          </div>
           <h1 className="text-xl md:text-2xl font-semibold text-slate-900">{project.name}</h1>
           <p className="text-sm text-slate-500">
-            Клиент: {project.client?.company || project.client?.name || "Неизвестный клиент"} · Статус: {statusLabel}
+            Клиент: {project.client?.company || project.client?.name || "Неизвестный клиент"}
           </p>
         </div>
         <div className="flex flex-col items-start md:items-end gap-2">
@@ -73,7 +77,7 @@ export default async function ProjectDetailsPage({ params, searchParams }: Proje
       </div>
 
       <div className="space-y-6">
-        <div className="bg-white rounded-2xl shadow-sm p-4">
+        <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100 transition hover:-translate-y-0.5 hover:shadow-md">
           <h2 className="text-sm font-semibold text-slate-900 mb-2">
             Что делаем в этом месяце
           </h2>
@@ -82,7 +86,7 @@ export default async function ProjectDetailsPage({ params, searchParams }: Proje
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm p-4">
+        <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-slate-900">Отчеты по проекту</h2>
           </div>
@@ -91,7 +95,7 @@ export default async function ProjectDetailsPage({ params, searchParams }: Proje
           ) : (
             <div className="divide-y divide-slate-100 text-sm">
               {project.reports.map((report) => (
-                <div key={report.id} className="py-3 flex items-start justify-between gap-4">
+                <div key={report.id} className="py-3 flex items-start justify-between gap-4 transition hover:bg-slate-50 rounded-lg px-2 -mx-2">
                   <div>
                     <div className="font-medium text-slate-900">{project.name}</div>
                     <div className="text-xs text-slate-500">Период: {report.period}</div>

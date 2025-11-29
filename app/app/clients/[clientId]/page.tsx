@@ -36,6 +36,8 @@ export default async function ClientDetailsPage({ params, searchParams }: Client
     include: { project: true },
     orderBy: { createdAt: "desc" },
   });
+  const projectsCount = client.projects.length;
+  const reportsCount = reports.length;
 
   return (
     <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
@@ -45,16 +47,25 @@ export default async function ClientDetailsPage({ params, searchParams }: Client
         </Alert>
       )}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
-        <div className="space-y-1">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-2 text-xs text-slate-500">
+            <span className="rounded-full bg-slate-100 px-2 py-1">Клиент</span>
+            <span>В системе с {client.createdAt.toISOString().slice(0, 10)}</span>
+          </div>
           <h1 className="text-xl md:text-2xl font-semibold text-slate-900">
             {client.company || client.name}
           </h1>
           <p className="text-sm text-slate-500">
-            Клиент: {client.name} · Email: {client.contactEmail}
+            Контакт: {client.name} · Email: {client.contactEmail}
           </p>
-          <p className="text-xs md:text-sm text-slate-400">
-            В системе с {client.createdAt.toISOString().slice(0, 10)}
-          </p>
+          <div className="flex flex-wrap gap-2 text-xs text-slate-600">
+            <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-1">
+              Проектов: {projectsCount}
+            </span>
+            <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-1">
+              Отчетов: {reportsCount}
+            </span>
+          </div>
         </div>
         <div className="flex flex-col items-start md:items-end gap-2">
           <Link
@@ -75,7 +86,7 @@ export default async function ClientDetailsPage({ params, searchParams }: Client
 
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-          <div className="bg-white rounded-2xl shadow-sm p-4">
+          <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100 transition hover:-translate-y-0.5 hover:shadow-md">
             <h2 className="text-sm font-semibold text-slate-900 mb-3">
               Проекты
             </h2>
@@ -88,7 +99,7 @@ export default async function ClientDetailsPage({ params, searchParams }: Client
                 {client.projects.map((project) => (
                   <li
                     key={project.id}
-                    className="flex items-center justify-between"
+                    className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-slate-50 transition"
                   >
                     <div>
                       <Link

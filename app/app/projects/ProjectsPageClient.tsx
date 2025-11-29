@@ -90,21 +90,21 @@ export default function ProjectsPageClient({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl shadow-sm p-4">
+        <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100 transition hover:-translate-y-0.5 hover:shadow-md">
           <div className="text-xs text-slate-500 mb-1">Всего проектов</div>
-          <div className="text-2xl font-semibold">{total}</div>
+          <div className="text-3xl font-semibold text-slate-900">{total}</div>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm p-4">
+        <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100 transition hover:-translate-y-0.5 hover:shadow-md">
           <div className="text-xs text-slate-500 mb-1">Активные</div>
-          <div className="text-2xl font-semibold">{activeCount}</div>
+          <div className="text-3xl font-semibold text-slate-900">{activeCount}</div>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm p-4">
+        <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100 transition hover:-translate-y-0.5 hover:shadow-md">
           <div className="text-xs text-slate-500 mb-1">На паузе</div>
-          <div className="text-2xl font-semibold">{pausedCount}</div>
+          <div className="text-3xl font-semibold text-slate-900">{pausedCount}</div>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm p-4">
+      <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-sm font-semibold text-slate-900">
@@ -178,7 +178,7 @@ export default function ProjectsPageClient({
                   return (
                     <tr
                       key={project.id}
-                      className="border-b last:border-0 hover:bg-slate-50"
+                      className="border-b last:border-0 hover:bg-slate-50 transition"
                     >
                       <td className="py-2 pr-4">{project.name}</td>
                       <td className="py-2 pr-4">

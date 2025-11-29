@@ -64,25 +64,25 @@ export default function ReportsPageClient({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl shadow-sm p-4">
+        <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100 transition hover:-translate-y-0.5 hover:shadow-md">
           <div className="text-xs text-slate-500 mb-1">Всего отчетов</div>
-          <div className="text-2xl font-semibold">{totalReports}</div>
+          <div className="text-3xl font-semibold text-slate-900">{totalReports}</div>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm p-4">
+        <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100 transition hover:-translate-y-0.5 hover:shadow-md">
           <div className="text-xs text-slate-500 mb-1">
             Клиентов с отчетами
           </div>
-          <div className="text-2xl font-semibold">{clientsWithReports}</div>
+          <div className="text-3xl font-semibold text-slate-900">{clientsWithReports}</div>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm p-4">
+        <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100 transition hover:-translate-y-0.5 hover:shadow-md">
           <div className="text-xs text-slate-500 mb-1">Средний ROAS</div>
-          <div className="text-2xl font-semibold">
+          <div className="text-3xl font-semibold text-slate-900">
             {avgRoas.toFixed(1)}
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm p-4">
+      <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-sm font-semibold text-slate-900">
@@ -150,7 +150,7 @@ export default function ReportsPageClient({
                 {filteredReports.map((report) => (
                   <tr
                     key={report.id}
-                    className="border-b last:border-0 hover:bg-slate-50"
+                    className="border-b last:border-0 hover:bg-slate-50 transition"
                   >
                     <td className="py-2 pr-4">{report.projectName}</td>
                     <td className="py-2 pr-4">{report.clientName}</td>

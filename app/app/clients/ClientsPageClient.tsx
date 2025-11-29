@@ -67,48 +67,54 @@ export default function ClientsPageClient({ initialClients }: ClientsPageClientP
 
       <Card>
         <CardTitle className="mb-3">Добавить клиента</CardTitle>
-        <form
-          onSubmit={handleSubmit}
-          className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end"
-        >
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
-              Имя клиента
-            </label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Анна" />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+            <div className="md:col-span-2 space-y-1">
+              <label className="block text-sm font-medium text-slate-700">
+                Имя контакта
+              </label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Например, Иван Петров"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-slate-700">
+                Компания
+              </label>
+              <Input
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                placeholder="ООО Ромашка"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-slate-700">
+                Email
+              </label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="client@example.com"
+              />
+            </div>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
-              Компания
-            </label>
-            <Input
-              value={company}
-              onChange={(e) => setCompany(e.target.value)}
-              placeholder="Acme Store"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">
-              Email
-            </label>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="client@company.com"
-            />
-          </div>
-          <div>
-            <Button type="submit" className="w-full mt-5">
+          <p className="text-xs text-slate-500">
+            Контактные данные используются только для работы с отчетами и не передаются третьим лицам.
+          </p>
+          <div className="space-y-2">
+            <Button type="submit" className="w-full md:w-auto">
               Добавить
             </Button>
+            {error && (
+              <div className="text-xs text-red-600">
+                {error}
+              </div>
+            )}
           </div>
         </form>
-        {error && (
-          <div className="mt-2 text-xs text-red-600">
-            {error}
-          </div>
-        )}
       </Card>
 
       <Card>
