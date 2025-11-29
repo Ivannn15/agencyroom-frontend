@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "../../../../lib/db";
+import { deleteProject } from "./actions";
+import DeleteProjectButton from "./DeleteProjectButton";
 
 type ProjectPageProps = {
   params: Promise<{ projectId: string }>;
@@ -30,6 +32,8 @@ export default async function ProjectDetailsPage({ params }: ProjectPageProps) {
       ? "Пауза"
       : "Завершен";
 
+  const deleteProjectAction = deleteProject.bind(null, project.id);
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-3">
@@ -39,12 +43,21 @@ export default async function ProjectDetailsPage({ params }: ProjectPageProps) {
             Клиент: {project.client?.company || project.client?.name || "Неизвестный клиент"} · Статус: {statusLabel}
           </p>
         </div>
-        <Link
-          href={`/app/reports/new?projectId=${project.id}`}
-          className="shrink-0 inline-flex items-center rounded-lg border border-slate-300 text-slate-700 text-sm font-medium px-3 py-2 hover:bg-slate-50"
-        >
-          Создать отчет
-        </Link>
+        <div className="flex flex-col items-end gap-2">
+          <Link
+            href={`/app/projects/${project.id}/edit`}
+            className="inline-flex items-center text-sm text-sky-600 hover:text-sky-700"
+          >
+            Редактировать проект
+          </Link>
+          <Link
+            href={`/app/reports/new?projectId=${project.id}`}
+            className="shrink-0 inline-flex items-center rounded-lg border border-slate-300 text-slate-700 text-sm font-medium px-3 py-2 hover:bg-slate-50"
+          >
+            Создать отчет
+          </Link>
+          <DeleteProjectButton action={deleteProjectAction} />
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm p-4">

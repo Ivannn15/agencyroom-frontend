@@ -1,5 +1,12 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "../../../../lib/db";
+import {
+  deleteReport,
+  disablePublicLink,
+  enablePublicLink,
+} from "./actions";
+import DeleteReportButton from "./DeleteReportButton";
 
 type ReportPageProps = {
   params: Promise<{ reportId: string }>;
@@ -23,6 +30,14 @@ export default async function ReportDetailsPage({ params }: ReportPageProps) {
     notFound();
   }
 
+  const publicLink = await prisma.publicReportLink.findFirst({
+    where: { reportId: report.id },
+  });
+
+  const enablePublicLinkAction = enablePublicLink.bind(null, report.id);
+  const disablePublicLinkAction = disablePublicLink.bind(null, report.id);
+  const deleteReportAction = deleteReport.bind(null, report.id);
+
   const clientName = report.project?.client?.company || report.project?.client?.name || "";
 
   const whatWasDone = Array.isArray(report.whatWasDone)
@@ -34,13 +49,49 @@ export default async function ReportDetailsPage({ params }: ReportPageProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-slate-900">
-          {report.project?.name || "Отчет"}
-        </h1>
-        <p className="text-sm text-slate-500">
-          Клиент: {clientName} · Период: {report.period}
-        </p>
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold text-slate-900">
+            {report.project?.name || "Отчет"}
+          </h1>
+          <p className="text-sm text-slate-500">
+            Клиент: {clientName} · Период: {report.period}
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 items-start md:items-end">
+          <Link
+            href={`/app/reports/${report.id}/edit`}
+            className="inline-flex items-center text-sm text-sky-600 hover:text-sky-700"
+          >
+            Редактировать отчет
+          </Link>
+          {publicLink && publicLink.isActive ? (
+            <div className="space-y-1 text-right">
+              <div className="text-xs text-slate-500">Публичная ссылка:</div>
+              <div className="text-xs font-mono text-slate-700 break-all bg-slate-50 rounded px-2 py-1">
+                /c/{publicLink.publicId}
+              </div>
+              <form action={disablePublicLinkAction}>
+                <button
+                  type="submit"
+                  className="inline-flex items-center text-xs text-amber-600 hover:text-amber-700"
+                >
+                  Отключить публичную ссылку
+                </button>
+              </form>
+            </div>
+          ) : (
+            <form action={enablePublicLinkAction}>
+              <button
+                type="submit"
+                className="inline-flex items-center text-xs text-sky-600 hover:text-sky-700"
+              >
+                Включить публичную ссылку
+              </button>
+            </form>
+          )}
+          <DeleteReportButton action={deleteReportAction} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">

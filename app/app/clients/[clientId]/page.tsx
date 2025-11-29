@@ -40,12 +40,20 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
             В системе с {client.createdAt.toISOString().slice(0, 10)}
           </p>
         </div>
+        <div className="flex flex-col items-end gap-2">
+          <Link
+            href={`/app/clients/${client.id}/edit`}
+            className="inline-flex items-center text-sm text-sky-600 hover:text-sky-700"
+          >
+            Редактировать
+          </Link>
         <Link
           href={`/app/projects/new?clientId=${client.id}`}
           className="shrink-0 inline-flex items-center rounded-lg border border-slate-300 text-slate-700 text-sm font-medium px-3 py-2 hover:bg-slate-50"
         >
           Создать проект
         </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

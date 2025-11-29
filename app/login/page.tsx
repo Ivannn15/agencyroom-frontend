@@ -29,7 +29,7 @@ export default function LoginPage() {
       // фейковая задержка, чтобы было ощущение загрузки
       await new Promise((resolve) => setTimeout(resolve, 500));
       router.push("/app");
-    } catch (err) {
+    } catch {
       setError("Неверный email или пароль");
     } finally {
       setIsSubmitting(false);
