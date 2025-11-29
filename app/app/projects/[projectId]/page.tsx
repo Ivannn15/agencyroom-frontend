@@ -6,10 +6,11 @@ import DeleteProjectButton from "./DeleteProjectButton";
 
 type ProjectPageProps = {
   params: Promise<{ projectId: string }>;
+  searchParams: Promise<{ error?: string }>;
 };
 
-export default async function ProjectDetailsPage({ params }: ProjectPageProps) {
-  const { projectId } = await params;
+export default async function ProjectDetailsPage({ params, searchParams }: ProjectPageProps) {
+  const [{ projectId }, { error }] = await Promise.all([params, searchParams]);
   if (!projectId) {
     notFound();
   }
@@ -25,6 +26,11 @@ export default async function ProjectDetailsPage({ params }: ProjectPageProps) {
     notFound();
   }
 
+  const deleteError =
+    error === "hasReports"
+      ? "Нельзя удалить проект, пока у него есть отчеты. Сначала удалите отчеты этого проекта."
+      : null;
+
   const statusLabel =
     project.status === "active"
       ? "Активен"
@@ -36,6 +42,11 @@ export default async function ProjectDetailsPage({ params }: ProjectPageProps) {
 
   return (
     <div className="space-y-6">
+      {deleteError && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          {deleteError}
+        </div>
+      )}
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">{project.name}</h1>

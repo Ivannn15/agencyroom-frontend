@@ -28,3 +28,30 @@ export async function updateClient(clientId: string, formData: FormData) {
 
   redirect(`/app/clients/${clientId}`);
 }
+
+export async function deleteClient(clientId: string) {
+  const client = await prisma.client.findUnique({
+    where: { id: clientId },
+  });
+
+  if (!client) {
+    redirect("/app/clients");
+  }
+
+  const projectsCount = await prisma.project.count({
+    where: { clientId },
+  });
+
+  if (projectsCount > 0) {
+    redirect(`/app/clients/${clientId}?error=hasProjects`);
+  }
+
+  await prisma.client.delete({
+    where: { id: clientId },
+  });
+
+  revalidatePath("/app");
+  revalidatePath("/app/clients");
+
+  redirect("/app/clients");
+}

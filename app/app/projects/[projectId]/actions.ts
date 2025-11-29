@@ -47,7 +47,7 @@ export async function deleteProject(projectId: string) {
 
   const reportsCount = await prisma.report.count({ where: { projectId } });
   if (reportsCount > 0) {
-    throw new Error("Нельзя удалить проект, пока у него есть отчеты");
+    redirect(`/app/projects/${projectId}?error=hasReports`);
   }
 
   await prisma.project.delete({ where: { id: projectId } });

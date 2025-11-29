@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "../../../../lib/db";
+import DeleteClientButton from "./DeleteClientButton";
+import { deleteClient } from "./actions";
 
 type ClientPageProps = {
   params: Promise<{ clientId: string }>;
+  searchParams: Promise<{ error?: string }>;
 };
 
-export default async function ClientDetailsPage({ params }: ClientPageProps) {
-  const { clientId } = await params;
+export default async function ClientDetailsPage({ params, searchParams }: ClientPageProps) {
+  const [{ clientId }, { error }] = await Promise.all([params, searchParams]);
   if (!clientId) {
     notFound();
   }
@@ -20,6 +23,13 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
     notFound();
   }
 
+  const deleteError =
+    error === "hasProjects"
+      ? "Нельзя удалить клиента, пока у него есть проекты. Сначала удалите проекты и их отчеты."
+      : null;
+
+  const deleteClientAction = deleteClient.bind(null, client.id);
+
   const reports = await prisma.report.findMany({
     where: { project: { clientId } },
     include: { project: true },
@@ -28,6 +38,11 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
 
   return (
     <div className="space-y-6">
+      {deleteError && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          {deleteError}
+        </div>
+      )}
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">
@@ -53,6 +68,7 @@ export default async function ClientDetailsPage({ params }: ClientPageProps) {
         >
           Создать проект
         </Link>
+          <DeleteClientButton action={deleteClientAction} />
         </div>
       </div>
 
