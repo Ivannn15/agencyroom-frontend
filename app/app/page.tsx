@@ -19,8 +19,8 @@ export default async function AppDashboardPage() {
   const reportsCount = await prisma.report.count();
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-semibold text-slate-900">
+    <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
+      <h1 className="text-xl md:text-2xl font-semibold text-slate-900">
         Обзор агентства
       </h1>
 

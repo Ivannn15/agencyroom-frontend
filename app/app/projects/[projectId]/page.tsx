@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "../../../../lib/db";
 import { deleteProject } from "./actions";
 import DeleteProjectButton from "./DeleteProjectButton";
+import { Alert } from "../../../../components/ui/Alert";
 
 type ProjectPageProps = {
   params: Promise<{ projectId: string }>;
@@ -41,20 +42,20 @@ export default async function ProjectDetailsPage({ params, searchParams }: Proje
   const deleteProjectAction = deleteProject.bind(null, project.id);
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
       {deleteError && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        <Alert variant="warning">
           {deleteError}
-        </div>
+        </Alert>
       )}
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-slate-900">{project.name}</h1>
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
+        <div className="space-y-1">
+          <h1 className="text-xl md:text-2xl font-semibold text-slate-900">{project.name}</h1>
           <p className="text-sm text-slate-500">
             Клиент: {project.client?.company || project.client?.name || "Неизвестный клиент"} · Статус: {statusLabel}
           </p>
         </div>
-        <div className="flex flex-col items-end gap-2">
+        <div className="flex flex-col items-start md:items-end gap-2">
           <Link
             href={`/app/projects/${project.id}/edit`}
             className="inline-flex items-center text-sm text-sky-600 hover:text-sky-700"
@@ -71,40 +72,42 @@ export default async function ProjectDetailsPage({ params, searchParams }: Proje
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm p-4">
-        <h2 className="text-sm font-semibold text-slate-900 mb-2">
-          Что делаем в этом месяце
-        </h2>
-        <p className="text-sm text-slate-700">
-          Подготовка кампаний, оптимизация ключевых слов и посадочных страниц, регулярный анализ конверсий и бюджетов.
-        </p>
-      </div>
-
-      <div className="bg-white rounded-2xl shadow-sm p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-slate-900">Отчеты по проекту</h2>
+      <div className="space-y-6">
+        <div className="bg-white rounded-2xl shadow-sm p-4">
+          <h2 className="text-sm font-semibold text-slate-900 mb-2">
+            Что делаем в этом месяце
+          </h2>
+          <p className="text-sm text-slate-700">
+            Подготовка кампаний, оптимизация ключевых слов и посадочных страниц, регулярный анализ конверсий и бюджетов.
+          </p>
         </div>
-        {project.reports.length === 0 ? (
-          <p className="text-xs text-slate-500">По этому проекту пока нет отчетов.</p>
-        ) : (
-          <div className="divide-y divide-slate-100 text-sm">
-            {project.reports.map((report) => (
-              <div key={report.id} className="py-3 flex items-start justify-between gap-4">
-                <div>
-                  <div className="font-medium text-slate-900">{project.name}</div>
-                  <div className="text-xs text-slate-500">Период: {report.period}</div>
-                  <div className="text-xs text-slate-600 mt-1">{report.summary}</div>
-                </div>
-                <Link
-                  href={`/app/reports/${report.id}`}
-                  className="text-xs px-3 py-1 rounded-full border border-sky-200 text-sky-700 hover:bg-sky-50"
-                >
-                  Открыть
-                </Link>
-              </div>
-            ))}
+
+        <div className="bg-white rounded-2xl shadow-sm p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-slate-900">Отчеты по проекту</h2>
           </div>
-        )}
+          {project.reports.length === 0 ? (
+            <p className="text-xs text-slate-500">По этому проекту пока нет отчетов.</p>
+          ) : (
+            <div className="divide-y divide-slate-100 text-sm">
+              {project.reports.map((report) => (
+                <div key={report.id} className="py-3 flex items-start justify-between gap-4">
+                  <div>
+                    <div className="font-medium text-slate-900">{project.name}</div>
+                    <div className="text-xs text-slate-500">Период: {report.period}</div>
+                    <div className="text-xs text-slate-600 mt-1">{report.summary}</div>
+                  </div>
+                  <Link
+                    href={`/app/reports/${report.id}`}
+                    className="text-xs px-3 py-1 rounded-full border border-sky-200 text-sky-700 hover:bg-sky-50"
+                  >
+                    Открыть
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

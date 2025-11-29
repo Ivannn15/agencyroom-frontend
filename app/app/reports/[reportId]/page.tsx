@@ -48,10 +48,10 @@ export default async function ReportDetailsPage({ params }: ReportPageProps) {
     : null;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-slate-900">
+    <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
+        <div className="space-y-1">
+          <h1 className="text-xl md:text-2xl font-semibold text-slate-900">
             {report.project?.name || "Отчет"}
           </h1>
           <p className="text-sm text-slate-500">
@@ -66,8 +66,8 @@ export default async function ReportDetailsPage({ params }: ReportPageProps) {
             Редактировать отчет
           </Link>
           {publicLink && publicLink.isActive ? (
-            <div className="space-y-1 text-right">
-              <div className="text-xs text-slate-500">Публичная ссылка:</div>
+            <div className="space-y-1 text-left md:text-right">
+              <div className="text-xs text-slate-500">Публичная ссылка для клиента</div>
               <div className="text-xs font-mono text-slate-700 break-all bg-slate-50 rounded px-2 py-1">
                 /c/{publicLink.publicId}
               </div>
@@ -94,22 +94,22 @@ export default async function ReportDetailsPage({ params }: ReportPageProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <div className="bg-white rounded-2xl shadow-sm p-4">
           <div className="text-xs text-slate-500 mb-1">ROAS</div>
-          <div className="text-2xl font-semibold">
+          <div className="text-2xl font-semibold text-slate-900">
             {report.roas != null ? report.roas.toFixed(1) : "—"}
           </div>
         </div>
         <div className="bg-white rounded-2xl shadow-sm p-4">
           <div className="text-xs text-slate-500 mb-1">Расход</div>
-          <div className="text-2xl font-semibold">
+          <div className="text-2xl font-semibold text-slate-900">
             {report.spend != null ? report.spend.toLocaleString("ru-RU") + " ₽" : "—"}
           </div>
         </div>
         <div className="bg-white rounded-2xl shadow-sm p-4">
           <div className="text-xs text-slate-500 mb-1">Выручка</div>
-          <div className="text-2xl font-semibold">
+          <div className="text-2xl font-semibold text-slate-900">
             {report.revenue != null
               ? report.revenue.toLocaleString("ru-RU") + " ₽"
               : "—"}
@@ -117,69 +117,71 @@ export default async function ReportDetailsPage({ params }: ReportPageProps) {
         </div>
         <div className="bg-white rounded-2xl shadow-sm p-4">
           <div className="text-xs text-slate-500 mb-1">Лиды</div>
-          <div className="text-2xl font-semibold">
+          <div className="text-2xl font-semibold text-slate-900">
             {report.leads != null ? report.leads.toLocaleString("ru-RU") : "—"}
           </div>
         </div>
         <div className="bg-white rounded-2xl shadow-sm p-4">
           <div className="text-xs text-slate-500 mb-1">CPA</div>
-          <div className="text-2xl font-semibold">
+          <div className="text-2xl font-semibold text-slate-900">
             {report.cpa != null ? report.cpa.toLocaleString("ru-RU") + " ₽" : "—"}
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm p-4">
-        <h2 className="text-sm font-semibold text-slate-900 mb-3">
-          Краткое резюме
-        </h2>
-        <p className="text-sm text-slate-700">{report.summary}</p>
+      <div className="space-y-6">
+        <div className="bg-white rounded-2xl shadow-sm p-4">
+          <h2 className="text-sm font-semibold text-slate-900 mb-3">
+            Краткое резюме
+          </h2>
+          <p className="text-sm text-slate-700">{report.summary}</p>
+        </div>
+
+        {whatWasDone && whatWasDone.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-sm p-4">
+            <h2 className="text-sm font-semibold text-slate-900 mb-3">
+              Что делали
+            </h2>
+            <ul className="list-disc pl-5 space-y-1 text-sm text-slate-700">
+              {whatWasDone.map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {nextPlan && nextPlan.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-sm p-4">
+            <h2 className="text-sm font-semibold text-slate-900 mb-3">
+              Выводы и план
+            </h2>
+            <ul className="list-disc pl-5 space-y-1 text-sm text-slate-700">
+              {nextPlan.map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {report.project && (
+          <div className="bg-white rounded-2xl shadow-sm p-4">
+            <h2 className="text-sm font-semibold text-slate-900 mb-3">
+              Информация о проекте
+            </h2>
+            <p className="text-sm text-slate-700">
+              Проект: {report.project.name}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              Статус:{" "}
+              {report.project.status === "active"
+                ? "Активен"
+                : report.project.status === "paused"
+                ? "Пауза"
+                : "Завершен"}
+            </p>
+          </div>
+        )}
       </div>
-
-      {whatWasDone && whatWasDone.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-sm p-4">
-          <h2 className="text-sm font-semibold text-slate-900 mb-3">
-            Что делали
-          </h2>
-          <ul className="list-disc pl-5 space-y-1 text-sm text-slate-700">
-            {whatWasDone.map((item, idx) => (
-              <li key={idx}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {nextPlan && nextPlan.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-sm p-4">
-          <h2 className="text-sm font-semibold text-slate-900 mb-3">
-            Выводы и план
-          </h2>
-          <ul className="list-disc pl-5 space-y-1 text-sm text-slate-700">
-            {nextPlan.map((item, idx) => (
-              <li key={idx}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {report.project && (
-        <div className="bg-white rounded-2xl shadow-sm p-4">
-          <h2 className="text-sm font-semibold text-slate-900 mb-3">
-            Информация о проекте
-          </h2>
-          <p className="text-sm text-slate-700">
-            Проект: {report.project.name}
-          </p>
-          <p className="text-xs text-slate-500 mt-1">
-            Статус:{" "}
-            {report.project.status === "active"
-              ? "Активен"
-              : report.project.status === "paused"
-              ? "Пауза"
-              : "Завершен"}
-          </p>
-        </div>
-      )}
     </div>
   );
 }
