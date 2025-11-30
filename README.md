@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AgencyRoom Frontend (Next.js)
 
-## Getting Started
+Next.js приложение для CRM-платформы AgencyRoom. Поддерживает админку агентства и клиентский кабинет.
 
-First, run the development server:
+## Быстрый старт
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. Запустите backend (http://localhost:4000):
+   ```bash
+   cd backend
+   npm run start:dev
+   ```
+2. Запустите frontend:
+   ```bash
+   npm install
+   npm run dev
+   ```
+   По умолчанию фронт слушает http://localhost:3000 (при занятости порта переключится на 3001).
+3. Переменные окружения для фронта:
+   - `NEXT_PUBLIC_API_URL` — базовый URL API (по умолчанию http://localhost:4000).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Маршруты
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Админская зона: текущие страницы `/login`, `/app` (демо/заготовки).
+- Клиентский кабинет:
+  - `/client/login` — вход для роли client.
+  - `/client` — дашборд: фильтры по периоду, сводка, список опубликованных отчетов.
+  - `/client/reports/[id]` — детальный просмотр отчета.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Как проверить клиентский кабинет (demo)
 
-## Learn More
+1. Запустите backend и frontend (см. выше).
+2. В браузере откройте `/client/login`.
+3. Введите демо-доступ:
+   - email: `client@alpharetail.com`
+   - password: `password123`
+4. После входа:
+   - произойдет редирект на `/client`,
+   - в блоке сводки отобразятся агрегаты из `/client/reports/summary`,
+   - в списке будет минимум один опубликованный отчет (из сид-данных).
+5. Откройте отчет: перейдите по кнопке «Открыть» → `/client/reports/[id]`, убедитесь, что видны все поля.
+6. Попробуйте сменить период через «Период с/по» и кнопку «Применить» — обновятся сводка и список.
+7. Кнопка «Выйти» очищает токен и возвращает на `/client/login`.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Примечания
+- Все запросы в клиентской зоне идут к backend API на `NEXT_PUBLIC_API_URL` с Bearer-токеном.
+- Клиентская зона доступна только роли `client`; при отсутствии токена или неверной роли происходит редирект на `/client/login`.

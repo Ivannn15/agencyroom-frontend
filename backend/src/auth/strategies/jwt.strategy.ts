@@ -27,7 +27,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       email: user.email,
       role: user.role,
       agencyId: user.agencyId,
-      name: user.name
+      name: user.name,
+      clientId: user.clientId
     };
   }
 }

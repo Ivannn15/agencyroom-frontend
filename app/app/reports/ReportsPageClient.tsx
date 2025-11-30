@@ -4,6 +4,9 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Button } from "../../../components/ui/Button";
 import { EmptyState } from "../../../components/ui/EmptyState";
+import { Badge } from "../../../components/ui/Badge";
+import { useAdminAuth } from "../../../components/admin/AdminAuthProvider";
+import { publishReport, unpublishReport, exportReport } from "../../../lib/admin-api";
 
 type ReportForUi = {
   id: string;
@@ -12,6 +15,8 @@ type ReportForUi = {
   period: string;
   summary: string;
   roas: number | null;
+  status: "draft" | "published";
+  publishedAt: string | null;
   clientId: string;
 };
 
@@ -30,12 +35,16 @@ export default function ReportsPageClient({
   reports: ReportForUi[];
   clients: ClientForUi[];
 }) {
+  const { token } = useAdminAuth();
   const [clientId, setClientId] = useState<ClientFilter>("all");
   const [search, setSearch] = useState("");
+  const [data, setData] = useState(reports);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const filteredReports = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return reports.filter((report) => {
+    return data.filter((report) => {
       const clientOk = clientId === "all" || report.clientId === clientId;
       const searchOk =
         !query ||
@@ -44,13 +53,65 @@ export default function ReportsPageClient({
         report.summary.toLowerCase().includes(query);
       return clientOk && searchOk;
     });
-  }, [reports, clientId, search]);
+  }, [data, clientId, search]);
 
-  const totalReports = reports.length;
-  const clientsWithReports = new Set(reports.map((r) => r.clientId)).size;
+  const totalReports = data.length;
+  const clientsWithReports = new Set(data.map((r) => r.clientId)).size;
   const avgRoas =
-    reports.reduce((sum, r) => sum + (r.roas ?? 0), 0) /
-    (reports.filter((r) => r.roas != null).length || 1);
+    data.reduce((sum, r) => sum + (r.roas ?? 0), 0) /
+    (data.filter((r) => r.roas != null).length || 1);
+
+  const handlePublishToggle = async (reportId: string, status: "draft" | "published") => {
+    if (!token) {
+      setActionMessage("Нет токена авторизации");
+      return;
+    }
+    setLoadingId(reportId);
+    setActionMessage(null);
+    try {
+      if (status === "draft") {
+        const updated = await publishReport(token, reportId);
+        setData((prev) =>
+          prev.map((r) =>
+            r.id === reportId ? { ...r, status: "published", publishedAt: updated.publishedAt ?? null } : r
+          )
+        );
+        setActionMessage("Отчет отправлен клиенту. Он появился в клиентском кабинете.");
+      } else {
+        await unpublishReport(token, reportId);
+        setData((prev) =>
+          prev.map((r) => (r.id === reportId ? { ...r, status: "draft", publishedAt: null } : r))
+        );
+        setActionMessage("Отчет снят с публикации и скрыт из клиентского кабинета.");
+      }
+    } catch (err) {
+      console.error(err);
+      setActionMessage("Не удалось выполнить действие. Попробуйте позже.");
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  const handleExport = async (reportId: string, format: "pdf" | "docx") => {
+    if (!token) {
+      setActionMessage("Нет токена авторизации");
+      return;
+    }
+    setLoadingId(reportId);
+    try {
+      const res = await exportReport(token, reportId, format);
+      setActionMessage(
+        res.status === "stub"
+          ? "Экспорт еще в разработке. Сейчас возвращаем заглушку, позже здесь появится файл."
+          : "Экспорт запущен."
+      );
+    } catch (err) {
+      console.error(err);
+      setActionMessage("Не удалось выполнить экспорт.");
+    } finally {
+      setLoadingId(null);
+    }
+  };
 
   return (
     <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
@@ -124,7 +185,11 @@ export default function ReportsPageClient({
           </div>
         </div>
 
-        {reports.length === 0 ? (
+        {actionMessage && (
+          <div className="mb-3 text-xs text-slate-600">{actionMessage}</div>
+        )}
+
+        {data.length === 0 ? (
           <EmptyState
             title="У вас пока нет отчетов"
             description="Создайте первый отчет по проекту, чтобы начать делиться результатами с клиентами."
@@ -152,7 +217,12 @@ export default function ReportsPageClient({
                     key={report.id}
                     className="border-b last:border-0 hover:bg-slate-50 transition"
                   >
-                    <td className="py-2 pr-4">{report.projectName}</td>
+                    <td className="py-2 pr-4 space-y-1">
+                      <div>{report.projectName}</div>
+                      <Badge variant={report.status === "published" ? "success" : "muted"}>
+                        {report.status === "published" ? "Отправлен клиенту" : "Черновик"}
+                      </Badge>
+                    </td>
                     <td className="py-2 pr-4">{report.clientName}</td>
                     <td className="py-2 pr-4">{report.period}</td>
                     <td className="py-2 pr-4 max-w-md">
@@ -165,6 +235,42 @@ export default function ReportsPageClient({
                       >
                         Открыть
                       </Link>
+                      <div className="mt-2 flex flex-wrap gap-2 justify-end">
+                        {report.status === "draft" ? (
+                          <Button
+                            className="text-xs px-3 py-1"
+                            onClick={() => handlePublishToggle(report.id, "draft")}
+                            disabled={loadingId === report.id}
+                          >
+                            Отправить клиенту
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            className="text-xs px-3 py-1"
+                            onClick={() => handlePublishToggle(report.id, "published")}
+                            disabled={loadingId === report.id}
+                          >
+                            Снять с публикации
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          className="text-xs px-3 py-1"
+                          onClick={() => handleExport(report.id, "pdf")}
+                          disabled={loadingId === report.id}
+                        >
+                          PDF
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="text-xs px-3 py-1"
+                          onClick={() => handleExport(report.id, "docx")}
+                          disabled={loadingId === report.id}
+                        >
+                          Word
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}

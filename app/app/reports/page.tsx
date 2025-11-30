@@ -21,6 +21,8 @@ export default async function ReportsPage() {
     period: report.period,
     summary: report.summary,
     roas: report.roas ?? null,
+    status: report.status,
+    publishedAt: report.publishedAt ? report.publishedAt.toISOString() : null,
     clientId: report.project?.clientId ?? "",
   }));
 

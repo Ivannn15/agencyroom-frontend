@@ -6,4 +6,5 @@ export interface AuthUser {
   role: UserRole;
   agencyId: string;
   name?: string | null;
+  clientId?: string | null;
 }

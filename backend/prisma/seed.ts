@@ -1,4 +1,4 @@
-import { PrismaClient, ProjectStatus, UserRole } from '@prisma/client';
+import { PrismaClient, ProjectStatus, ReportStatus, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -117,6 +117,8 @@ async function main() {
         projectId: report.projectId,
         period: report.period,
         summary: report.summary,
+        status: ReportStatus.published,
+        publishedAt: new Date(),
         spend: report.spend,
         revenue: report.revenue,
         leads: report.leads,
@@ -127,6 +129,19 @@ async function main() {
       }
     });
   }
+
+  const clientUserPasswordHash = await bcrypt.hash('password123', 10);
+  await prisma.user.create({
+    data: {
+      id: 'user_client_alpha',
+      email: 'client@alpharetail.com',
+      name: 'Client Alpha',
+      role: UserRole.client,
+      agencyId: agency.id,
+      clientId: 'client_alpha',
+      passwordHash: clientUserPasswordHash
+    }
+  });
 
   for (const report of mockReports) {
     await prisma.publicReportLink.create({

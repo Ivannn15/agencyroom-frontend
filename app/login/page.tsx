@@ -1,21 +1,30 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
+import { useAdminAuth } from "../../components/admin/AdminAuthProvider";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const { login, token, user } = useAdminAuth();
+  const [email, setEmail] = useState("demo@agency.com");
+  const [password, setPassword] = useState("password123");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (token && user && user.role !== "client") {
+      router.replace("/app");
+    }
+  }, [router, token, user]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError(null);
 
     if (!email || !password) {
       setError("Введите email и пароль");
@@ -24,25 +33,30 @@ export default function LoginPage() {
 
     setIsSubmitting(true);
     try {
-      // TODO: заменить на реальный вызов API /auth/login
-      console.log("Login with", { email, password });
-      // фейковая задержка, чтобы было ощущение загрузки
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      router.push("/app");
-    } catch {
-      setError("Неверный email или пароль");
+      const res = await login({ email, password });
+      if (res.user.role === "client") {
+        setError("Этот аккаунт относится к клиентскому кабинету. Войдите через /client/login.");
+        return;
+      }
+      router.replace("/app");
+    } catch (err: any) {
+      if (err?.message === "client-account") {
+        setError("Этот аккаунт относится к клиентскому кабинету. Войдите через /client/login.");
+      } else {
+        setError("Неверный email или пароль");
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4">
+    <main className="min-h-screen flex items-center justify-center px-4 bg-slate-50">
       <Card className="max-w-md w-full p-8">
         <CardHeader className="mb-6 text-center">
           <CardTitle className="text-2xl mb-1">Вход в AgencyRoom</CardTitle>
           <p className="text-sm text-slate-500">
-            Клиентский кабинет и отчеты для performance-агентств.
+            Админка агентства. Клиенты авторизуются через /client/login.
           </p>
         </CardHeader>
 
@@ -79,9 +93,14 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-4 text-center text-xs text-slate-500">
-            Еще нет аккаунта?{" "}
-            <span className="text-sky-600">Регистрация появится позже</span>
+          <div className="mt-4 text-center text-xs text-slate-500 space-y-1">
+            <div>
+              Клиент?{" "}
+              <Link href="/client/login" className="text-sky-600 hover:text-sky-700">
+                Перейти в клиентский кабинет
+              </Link>
+            </div>
+            <div>Демо: demo@agency.com / password123</div>
           </div>
         </CardContent>
       </Card>

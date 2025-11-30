@@ -7,6 +7,7 @@ import {
   enablePublicLink,
 } from "./actions";
 import DeleteReportButton from "./DeleteReportButton";
+import ReportActionsPanel from "./ReportActionsPanel";
 
 type ReportPageProps = {
   params: Promise<{ reportId: string }>;
@@ -69,6 +70,11 @@ export default async function ReportDetailsPage({ params }: ReportPageProps) {
           >
             Редактировать отчет
           </Link>
+          <ReportActionsPanel
+            reportId={report.id}
+            status={report.status}
+            publishedAt={report.publishedAt?.toISOString() ?? null}
+          />
           {publicLink && publicLink.isActive ? (
             <div className="space-y-1 text-left md:text-right">
               <div className="text-xs text-slate-500">Публичная ссылка для клиента</div>

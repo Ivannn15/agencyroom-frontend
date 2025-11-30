@@ -14,8 +14,13 @@
 - Dev: `npm run start:dev` (http://localhost:4000)
 - Prod build: `npm run build` + `npm run start:prod`
 
+## Роли
+- `owner/manager` — админская часть агентства, полный доступ к своим клиентам/проектам/отчетам.
+- `viewer` — чтение (пока не используется явно).
+- `client` — пользователь клиента, привязан к одному Client, видит только опубликованные отчеты своего бизнеса.
+
 ## Доступные эндпоинты
-Все ниже (кроме регистрации/логина) требуют JWT Bearer и ролей `owner`/`manager`. Данные фильтруются по `agencyId` из токена.
+Все ниже (кроме регистрации/логина и health) требуют JWT Bearer. CRUD в админке защищен ролями `owner`/`manager` и скоупом `agencyId`.
 
 ### Auth
 - `POST /auth/register-agency` — создать агентство + владельца, вернуть JWT.
@@ -35,11 +40,29 @@
 - `PATCH /projects/:id` — обновление.
 
 ### Reports
-- `GET /reports?projectId=` — отчеты по агентству (опционально фильтр по проекту).
+- `GET /reports?projectId=&publishedOnly=&fromPeriod=&toPeriod=&page=&pageSize=` — отчеты по агентству (фильтры + пагинация), возвращает `{ items, page, pageSize, total }`.
+- `GET /reports/summary?projectId=&fromPeriod=&toPeriod=&publishedOnly=` — сводка (totalSpend, totalRevenue, totalLeads, avgCpa, avgRoas, countReports).
 - `POST /reports` — создать отчет.
 - `GET /reports/:id` — отчет + проект/клиент.
 - `PATCH /reports/:id` — обновление отчета.
+- `POST /reports/:id/publish` — опубликовать отчет (status → published).
+- `POST /reports/:id/unpublish` — снять с публикации (status → draft).
+- `GET /reports/:id/export?format=pdf|docx` — заглушка экспорта (возвращает JSON с reportId, format, message).
+
+### Client Portal API (для роли `client`)
+- Авторизация через обычный `/auth/login` (демо: `client@alpharetail.com` / `password123`).
+- `GET /client/reports?fromPeriod=&toPeriod=&page=&pageSize=` — опубликованные отчеты привязанного клиента.
+- `GET /client/reports/:id` — один опубликованный отчет.
+- `GET /client/reports/summary?fromPeriod=&toPeriod=` — агрегированная сводка по опубликованным отчетам.
+*Все ручки требуют JWT и роли `client`, доступ ограничен привязанным clientId.*
+
+### Health
+- `GET /health` — простой health-check (без авторизации).
+
+## Seed / Demo
+- agency owner: `demo@agency.com` / `password123`
+- client user: `client@alpharetail.com` / `password123` (привязан к клиенту Alpha Retail, видит только опубликованные отчеты)
 
 ## Примечания
-- JWT payload содержит `userId`, `role`, `agencyId`; доступ к клиентам/проектам/отчетам ограничен `agencyId`.
-- Prisma-схема в `prisma/schema.prisma` совпадает с фронтом, добавлены поля `passwordHash` (User) и `contactPhone` (Client) для авторизации/контактов.
+- JWT payload содержит `userId`, `role`, `agencyId`, `clientId`; доступ к сущностям ограничен по `agencyId`, а клиентские ручки — по `clientId`.
+- Prisma-схема в `prisma/schema.prisma` расширена полями `passwordHash` (User), `contactPhone` (Client), статусами отчетов и связью user→client для роли `client`.

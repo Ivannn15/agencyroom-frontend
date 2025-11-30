@@ -88,8 +88,8 @@ export class AuthService {
   }
 
   private toAuthUser(user: User): AuthUser {
-    const { id, email, role, agencyId, name } = user;
-    return { id, email, role, agencyId, name };
+    const { id, email, role, agencyId, name, clientId } = user;
+    return { id, email, role, agencyId, name, clientId };
   }
 
   private signToken(user: AuthUser) {
@@ -97,7 +97,8 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       role: user.role,
-      agencyId: user.agencyId
+      agencyId: user.agencyId,
+      clientId: user.clientId
     };
     return this.jwtService.sign(payload);
   }

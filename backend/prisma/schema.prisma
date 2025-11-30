@@ -11,12 +11,18 @@ enum UserRole {
   owner
   manager
   viewer
+  client
 }
 
 enum ProjectStatus {
   active
   paused
   completed
+}
+
+enum ReportStatus {
+  draft
+  published
 }
 
 model Agency {
@@ -41,12 +47,15 @@ model User {
   passwordHash String?
   role      UserRole
   agencyId  String
+  clientId  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   agency Agency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  client Client? @relation("ClientUsers", fields: [clientId], references: [id])
 
   @@index([agencyId])
+  @@index([clientId])
 }
 
 model Client {
@@ -61,6 +70,7 @@ model Client {
 
   agency   Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   projects Project[]
+  users    User[]   @relation("ClientUsers")
 
   @@index([agencyId])
 }
@@ -85,6 +95,8 @@ model Report {
   projectId   String
   period      String
   summary     String
+  status      ReportStatus @default(draft)
+  publishedAt DateTime?
   spend       Float?
   revenue     Float?
   leads       Int?

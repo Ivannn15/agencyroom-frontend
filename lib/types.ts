@@ -3,7 +3,9 @@ export type User = {
   email: string;
   name?: string;
   initials?: string;
-  role: "owner" | "manager" | "viewer";
+  role: "owner" | "manager" | "viewer" | "client";
+  agencyId?: string;
+  clientId?: string | null;
 };
 
 export type Agency = {
@@ -19,6 +21,7 @@ export type Client = {
   name: string;
   company?: string;
   contactEmail: string;
+  contactPhone?: string | null;
   createdAt: string;
 };
 
@@ -27,6 +30,7 @@ export type Project = {
   clientId: string;
   name: string;
   status: "active" | "paused" | "completed";
+  notes?: string | null;
 };
 
 export type ReportKpi = {
@@ -39,13 +43,37 @@ export type ReportKpi = {
 
 export type Report = {
   id: string;
-  clientId: string;
-  projectId?: string;
+  clientId?: string;
+  projectId: string;
   period: string;
   summary: string;
-  kpi: ReportKpi;
-  createdAt: string;
+  spend?: number | null;
+  revenue?: number | null;
+  leads?: number | null;
+  cpa?: number | null;
+  roas?: number | null;
+  kpi?: ReportKpi;
+  status?: "draft" | "published";
+  publishedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
   whatWasDone?: string[];
   nextPlan?: string[];
-  publicId?: string;
+  project?: Project & { client?: Client };
+};
+
+export type ClientSummaryResponse = {
+  totalSpend: number;
+  totalRevenue: number;
+  totalLeads: number;
+  avgCpa: number | null;
+  avgRoas: number | null;
+  countReports: number;
+};
+
+export type ClientReportsResponse = {
+  items: Report[];
+  page: number;
+  pageSize: number;
+  total: number;
 };
