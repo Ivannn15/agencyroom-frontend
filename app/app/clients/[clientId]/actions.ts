@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { prisma } from "../../../../lib/db";
+import { deleteClient as deleteClientApi, updateClient as updateClientApi } from "../../../../lib/admin-api";
+import { requireAdminToken } from "../../../../lib/admin-token";
 
 export async function updateClient(clientId: string, formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
@@ -13,14 +14,20 @@ export async function updateClient(clientId: string, formData: FormData) {
     throw new Error("Name and email are required");
   }
 
-  await prisma.client.update({
-    where: { id: clientId },
-    data: {
+  const token = await requireAdminToken();
+
+  try {
+    await updateClientApi(token, clientId, {
       name,
       company,
       contactEmail: email,
-    },
-  });
+    });
+  } catch (err: any) {
+    if (err?.status === 404) {
+      redirect("/app/clients");
+    }
+    throw err;
+  }
 
   revalidatePath("/app");
   revalidatePath("/app/clients");
@@ -30,25 +37,19 @@ export async function updateClient(clientId: string, formData: FormData) {
 }
 
 export async function deleteClient(clientId: string) {
-  const client = await prisma.client.findUnique({
-    where: { id: clientId },
-  });
+  const token = await requireAdminToken();
 
-  if (!client) {
-    redirect("/app/clients");
+  try {
+    await deleteClientApi(token, clientId);
+  } catch (err: any) {
+    if (err?.status === 404) {
+      redirect("/app/clients");
+    }
+    if (err?.status === 400) {
+      redirect(`/app/clients/${clientId}?error=hasProjects`);
+    }
+    throw err;
   }
-
-  const projectsCount = await prisma.project.count({
-    where: { clientId },
-  });
-
-  if (projectsCount > 0) {
-    redirect(`/app/clients/${clientId}?error=hasProjects`);
-  }
-
-  await prisma.client.delete({
-    where: { id: clientId },
-  });
 
   revalidatePath("/app");
   revalidatePath("/app/clients");

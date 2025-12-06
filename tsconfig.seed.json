@@ -7,5 +7,5 @@
     "resolveJsonModule": true,
     "skipLibCheck": true
   },
-  "include": ["prisma/seed.ts", "lib/mockData.ts"]
+  "include": ["backend/prisma/seed.ts", "lib/mockData.ts"]
 }

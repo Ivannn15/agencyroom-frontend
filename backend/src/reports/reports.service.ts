@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, ReportStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -31,6 +32,7 @@ export class ReportsService {
   findAll(
     agencyId: string,
     projectId?: string,
+    clientId?: string,
     onlyPublished?: boolean,
     options?: { page?: number; pageSize?: number; fromPeriod?: string; toPeriod?: string }
   ) {
@@ -39,6 +41,7 @@ export class ReportsService {
     const pageSize = Math.min(Math.max(1, rawPageSize), 100);
     const where = this.buildWhere(agencyId, {
       projectId,
+      clientId,
       onlyPublished,
       fromPeriod: options?.fromPeriod,
       toPeriod: options?.toPeriod
@@ -78,7 +81,8 @@ export class ReportsService {
       include: {
         project: {
           include: { client: true }
-        }
+        },
+        publicLink: true
       }
     });
 
@@ -97,9 +101,10 @@ export class ReportsService {
     });
   }
 
-  async getSummary(agencyId: string, options?: { projectId?: string; fromPeriod?: string; toPeriod?: string; onlyPublished?: boolean }) {
+  async getSummary(agencyId: string, options?: { projectId?: string; clientId?: string; fromPeriod?: string; toPeriod?: string; onlyPublished?: boolean }) {
     const where = this.buildWhere(agencyId, {
       projectId: options?.projectId,
+      clientId: options?.clientId,
       fromPeriod: options?.fromPeriod,
       toPeriod: options?.toPeriod,
       onlyPublished: options?.onlyPublished
@@ -170,6 +175,51 @@ export class ReportsService {
     });
   }
 
+  async delete(id: string, agencyId: string) {
+    await this.ensureReportAccess(id, agencyId);
+
+    await this.prisma.publicReportLink.deleteMany({
+      where: { reportId: id }
+    });
+
+    return this.prisma.report.delete({
+      where: { id }
+    });
+  }
+
+  async enablePublicLink(id: string, agencyId: string) {
+    await this.ensureReportAccess(id, agencyId);
+
+    const existing = await this.prisma.publicReportLink.findFirst({
+      where: { reportId: id }
+    });
+
+    if (!existing) {
+      const publicId = randomUUID().replace(/-/g, '').slice(0, 12);
+      return this.prisma.publicReportLink.create({
+        data: {
+          reportId: id,
+          publicId,
+          isActive: true
+        }
+      });
+    }
+
+    return this.prisma.publicReportLink.update({
+      where: { id: existing.id },
+      data: { isActive: true }
+    });
+  }
+
+  async disablePublicLink(id: string, agencyId: string) {
+    await this.ensureReportAccess(id, agencyId);
+
+    return this.prisma.publicReportLink.updateMany({
+      where: { reportId: id },
+      data: { isActive: false }
+    });
+  }
+
   async export(id: string, agencyId: string, format: 'pdf' | 'docx') {
     await this.ensureReportAccess(id, agencyId);
 
@@ -209,12 +259,13 @@ export class ReportsService {
 
   private buildWhere(
     agencyId: string,
-    filters: { projectId?: string; onlyPublished?: boolean; fromPeriod?: string; toPeriod?: string }
+    filters: { projectId?: string; clientId?: string; onlyPublished?: boolean; fromPeriod?: string; toPeriod?: string }
   ): Prisma.ReportWhereInput {
     const where: Prisma.ReportWhereInput = {
       project: {
         client: { agencyId },
-        ...(filters.projectId ? { id: filters.projectId } : {})
+        ...(filters.projectId ? { id: filters.projectId } : {}),
+        ...(filters.clientId ? { clientId: filters.clientId } : {})
       }
     };
 

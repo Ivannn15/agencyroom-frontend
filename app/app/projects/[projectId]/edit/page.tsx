@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
-import { prisma } from "../../../../../lib/db";
+import { notFound, redirect } from "next/navigation";
+import { fetchClients, fetchProject } from "../../../../../lib/admin-api";
+import { getAdminTokenFromCookies } from "../../../../../lib/admin-token";
 import ProjectEditForm from "../ProjectEditForm";
 import { updateProject } from "../actions";
 
@@ -14,9 +15,19 @@ export default async function ProjectEditPage({ params }: ProjectEditPageProps) 
     notFound();
   }
 
+  const token = await getAdminTokenFromCookies();
+  if (!token) {
+    redirect("/login");
+  }
+
   const [project, clients] = await Promise.all([
-    prisma.project.findUnique({ where: { id: projectId } }),
-    prisma.client.findMany({ orderBy: { createdAt: "desc" } }),
+    fetchProject(token, projectId).catch((err: any) => {
+      if (err?.status === 404) {
+        notFound();
+      }
+      throw err;
+    }),
+    fetchClients(token),
   ]);
 
   if (!project) {

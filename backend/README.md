@@ -6,9 +6,12 @@
 3. Создайте файл `.env` по примеру `.env.example` и пропишите `DATABASE_URL`, `JWT_SECRET`, при необходимости `PORT` (по умолчанию 4000).
 
 ## Prisma
-- Генерация клиента: `npm run prisma:generate`
-- Миграции: `npm run prisma:migrate`
-- Seed (демо-данные, владелец demo@agency.com / password123): `npx prisma db seed`
+- Каноничная схема: `prisma/schema.prisma` (здесь в backend), миграции в `prisma/migrations`.
+- Основные команды:
+  - Генерация клиента: `npm run prisma:generate`
+  - Миграции (dev): `npm run prisma:migrate`
+  - Reset+seed: `npm run db:reset`
+  - Seed (демо-данные: owner demo@agency.com / password123, client client@alpharetail.com / password123): `npm run db:seed`
 
 ## Запуск
 - Dev: `npm run start:dev` (http://localhost:4000)

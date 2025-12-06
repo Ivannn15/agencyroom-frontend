@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { prisma } from "../../../../lib/db";
+import { notFound, redirect } from "next/navigation";
+import { fetchClient, fetchReports } from "../../../../lib/admin-api";
+import { getAdminTokenFromCookies } from "../../../../lib/admin-token";
 import DeleteClientButton from "./DeleteClientButton";
 import { deleteClient } from "./actions";
 import { Alert } from "../../../../components/ui/Alert";
@@ -15,10 +16,21 @@ export default async function ClientDetailsPage({ params, searchParams }: Client
   if (!clientId) {
     notFound();
   }
-  const client = await prisma.client.findUnique({
-    where: { id: clientId },
-    include: { projects: true },
-  });
+
+  const token = await getAdminTokenFromCookies();
+  if (!token) {
+    redirect("/login");
+  }
+
+  let client;
+  try {
+    client = await fetchClient(token, clientId);
+  } catch (err: any) {
+    if (err?.status === 404) {
+      notFound();
+    }
+    throw err;
+  }
 
   if (!client) {
     notFound();
@@ -31,12 +43,10 @@ export default async function ClientDetailsPage({ params, searchParams }: Client
 
   const deleteClientAction = deleteClient.bind(null, client.id);
 
-  const reports = await prisma.report.findMany({
-    where: { project: { clientId } },
-    include: { project: true },
-    orderBy: { createdAt: "desc" },
-  });
-  const projectsCount = client.projects.length;
+  const reportsData = await fetchReports(token, { clientId, pageSize: 100 });
+  const reports = reportsData.items;
+  const clientProjects = client.projects ?? [];
+  const projectsCount = clientProjects.length;
   const reportsCount = reports.length;
 
   return (
@@ -50,7 +60,7 @@ export default async function ClientDetailsPage({ params, searchParams }: Client
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 text-xs text-slate-500">
             <span className="rounded-full bg-slate-100 px-2 py-1">Клиент</span>
-            <span>В системе с {client.createdAt.toISOString().slice(0, 10)}</span>
+            <span>В системе с {client.createdAt?.slice(0, 10)}</span>
           </div>
           <h1 className="text-xl md:text-2xl font-semibold text-slate-900">
             {client.company || client.name}
@@ -90,13 +100,13 @@ export default async function ClientDetailsPage({ params, searchParams }: Client
             <h2 className="text-sm font-semibold text-slate-900 mb-3">
               Проекты
             </h2>
-            {client.projects.length === 0 ? (
+            {clientProjects.length === 0 ? (
               <p className="text-xs text-slate-500">
                 Пока нет активных проектов.
               </p>
             ) : (
               <ul className="space-y-2 text-sm">
-                {client.projects.map((project) => (
+                {clientProjects.map((project) => (
                   <li
                     key={project.id}
                     className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-slate-50 transition"

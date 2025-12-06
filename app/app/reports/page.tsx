@@ -1,18 +1,20 @@
-import { prisma } from "../../../lib/db";
+import { redirect } from "next/navigation";
+import { fetchClients, fetchReports } from "../../../lib/admin-api";
+import { getAdminTokenFromCookies } from "../../../lib/admin-token";
 import ReportsPageClient from "./ReportsPageClient";
 
 export default async function ReportsPage() {
-  const [reports, clients] = await Promise.all([
-    prisma.report.findMany({
-      include: {
-        project: {
-          include: { client: true },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.client.findMany({ orderBy: { createdAt: "desc" } }),
+  const token = await getAdminTokenFromCookies();
+  if (!token) {
+    redirect("/login");
+  }
+
+  const [reportsResponse, clients] = await Promise.all([
+    fetchReports(token, { page: 1, pageSize: 200 }),
+    fetchClients(token),
   ]);
+
+  const reports = reportsResponse.items;
 
   const reportsForUi = reports.map((report) => ({
     id: report.id,
@@ -22,7 +24,7 @@ export default async function ReportsPage() {
     summary: report.summary,
     roas: report.roas ?? null,
     status: report.status,
-    publishedAt: report.publishedAt ? report.publishedAt.toISOString() : null,
+    publishedAt: report.publishedAt ?? null,
     clientId: report.project?.clientId ?? "",
   }));
 

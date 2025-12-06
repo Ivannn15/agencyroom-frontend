@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { ReportsService } from './reports.service';
 import { CreateReportDto } from './dto/create-report.dto';
@@ -20,6 +20,7 @@ export class ReportsController {
   findAll(
     @CurrentUser() user: AuthUser,
     @Query('projectId') projectId?: string,
+    @Query('clientId') clientId?: string,
     @Query('publishedOnly') publishedOnly?: string,
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
@@ -32,7 +33,7 @@ export class ReportsController {
     const safePage = Number.isFinite(pageNum) && pageNum > 0 ? Math.floor(pageNum) : 1;
     const safePageSize = Number.isFinite(pageSizeNum) && pageSizeNum > 0 ? Math.min(Math.floor(pageSizeNum), 100) : 20;
 
-    return this.reportsService.findAll(user.agencyId, projectId, onlyPublished, {
+    return this.reportsService.findAll(user.agencyId, projectId, clientId, onlyPublished, {
       page: safePage,
       pageSize: safePageSize,
       fromPeriod,
@@ -67,6 +68,11 @@ export class ReportsController {
     return this.reportsService.update(id, user.agencyId, dto);
   }
 
+  @Delete(':id')
+  remove(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.reportsService.delete(id, user.agencyId);
+  }
+
   @Post(':id/publish')
   publish(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.reportsService.publish(id, user.agencyId);
@@ -85,5 +91,15 @@ export class ReportsController {
   ) {
     const safeFormat: 'pdf' | 'docx' = query.format === 'docx' ? 'docx' : 'pdf';
     return this.reportsService.export(id, user.agencyId, safeFormat);
+  }
+
+  @Post(':id/public-link')
+  enablePublicLink(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.reportsService.enablePublicLink(id, user.agencyId);
+  }
+
+  @Delete(':id/public-link')
+  disablePublicLink(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.reportsService.disablePublicLink(id, user.agencyId);
   }
 }

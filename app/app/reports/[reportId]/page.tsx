@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { prisma } from "../../../../lib/db";
+import { notFound, redirect } from "next/navigation";
+import { fetchReport } from "../../../../lib/admin-api";
+import { getAdminTokenFromCookies } from "../../../../lib/admin-token";
 import {
   deleteReport,
   disablePublicLink,
@@ -18,22 +19,27 @@ export default async function ReportDetailsPage({ params }: ReportPageProps) {
   if (!reportId) {
     notFound();
   }
-  const report = await prisma.report.findUnique({
-    where: { id: reportId },
-    include: {
-      project: {
-        include: { client: true },
-      },
-    },
-  });
+
+  const token = await getAdminTokenFromCookies();
+  if (!token) {
+    redirect("/login");
+  }
+
+  let report;
+  try {
+    report = await fetchReport(token, reportId);
+  } catch (err: any) {
+    if (err?.status === 404) {
+      notFound();
+    }
+    throw err;
+  }
 
   if (!report) {
     notFound();
   }
 
-  const publicLink = await prisma.publicReportLink.findFirst({
-    where: { reportId: report.id },
-  });
+  const publicLink = report.publicLink;
 
   const enablePublicLinkAction = enablePublicLink.bind(null, report.id);
   const disablePublicLinkAction = disablePublicLink.bind(null, report.id);
@@ -73,7 +79,7 @@ export default async function ReportDetailsPage({ params }: ReportPageProps) {
           <ReportActionsPanel
             reportId={report.id}
             status={report.status}
-            publishedAt={report.publishedAt?.toISOString() ?? null}
+            publishedAt={report.publishedAt ?? null}
           />
           {publicLink && publicLink.isActive ? (
             <div className="space-y-1 text-left md:text-right">

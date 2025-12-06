@@ -1,9 +1,14 @@
 "use server";
-
-import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { prisma } from "../../../../lib/db";
+import {
+  deleteReport as deleteReportApi,
+  disablePublicLink as disablePublicLinkApi,
+  enablePublicLink as enablePublicLinkApi,
+  fetchReport,
+  updateReport as updateReportApi,
+} from "../../../../lib/admin-api";
+import { requireAdminToken } from "../../../../lib/admin-token";
 
 export async function updateReport(reportId: string, formData: FormData) {
   const period = String(formData.get("period") ?? "").trim();
@@ -22,64 +27,60 @@ export async function updateReport(reportId: string, formData: FormData) {
     throw new Error("period and summary are required");
   }
 
-  const report = await prisma.report.update({
-    where: { id: reportId },
-    data: {
-      period,
-      summary,
-      spend: spend ? Number(spend) : null,
-      revenue: revenue ? Number(revenue) : null,
-      leads: leads ? Number(leads) : null,
-      cpa: cpa ? Number(cpa) : null,
-      roas: roas ? Number(roas) : null,
-      whatWasDone:
-        whatWasDoneRaw.length > 0
-          ? whatWasDoneRaw.split("\n").map((s) => s.trim()).filter(Boolean)
-          : null,
-      nextPlan:
-        nextPlanRaw.length > 0
-          ? nextPlanRaw.split("\n").map((s) => s.trim()).filter(Boolean)
-          : null,
-    },
-    include: {
-      project: true,
-    },
+  const token = await requireAdminToken();
+
+  await updateReportApi(token, reportId, {
+    period,
+    summary,
+    spend: spend ? Number(spend) : null,
+    revenue: revenue ? Number(revenue) : null,
+    leads: leads ? Number(leads) : null,
+    cpa: cpa ? Number(cpa) : null,
+    roas: roas ? Number(roas) : null,
+    whatWasDone:
+      whatWasDoneRaw.length > 0
+        ? whatWasDoneRaw.split("\n").map((s) => s.trim()).filter(Boolean)
+        : null,
+    nextPlan:
+      nextPlanRaw.length > 0
+        ? nextPlanRaw.split("\n").map((s) => s.trim()).filter(Boolean)
+        : null,
   });
+
+  const updatedReport = await fetchReport(token, reportId).catch(() => null);
 
   revalidatePath("/app");
   revalidatePath("/app/reports");
   revalidatePath(`/app/reports/${reportId}`);
 
-  if (report.projectId) {
-    revalidatePath(`/app/projects/${report.projectId}`);
+  if (updatedReport?.projectId) {
+    revalidatePath(`/app/projects/${updatedReport.projectId}`);
   }
-  if (report.project?.clientId) {
-    revalidatePath(`/app/clients/${report.project.clientId}`);
+  if (updatedReport?.project?.clientId) {
+    revalidatePath(`/app/clients/${updatedReport.project.clientId}`);
   }
 
   redirect(`/app/reports/${reportId}`);
 }
 
 export async function deleteReport(reportId: string) {
-  const report = await prisma.report.findUnique({
-    where: { id: reportId },
-    include: { project: true },
+  const token = await requireAdminToken();
+  const report = await fetchReport(token, reportId).catch((err: any) => {
+    if (err?.status === 404) {
+      redirect("/app/reports");
+    }
+    throw err;
   });
 
-  if (!report) {
-    redirect("/app/reports");
-  }
-
-  await prisma.publicReportLink.deleteMany({ where: { reportId: report.id } });
-  await prisma.report.delete({ where: { id: report.id } });
+  await deleteReportApi(token, reportId);
 
   revalidatePath("/app");
   revalidatePath("/app/reports");
 
-  if (report.projectId) {
+  if (report?.projectId) {
     revalidatePath(`/app/projects/${report.projectId}`);
   }
-  if (report.project?.clientId) {
+  if (report?.project?.clientId) {
     revalidatePath(`/app/clients/${report.project.clientId}`);
   }
 
@@ -87,42 +88,18 @@ export async function deleteReport(reportId: string) {
 }
 
 export async function enablePublicLink(reportId: string) {
-  const report = await prisma.report.findUnique({ where: { id: reportId } });
-  if (!report) {
-    throw new Error("Report not found");
-  }
+  const token = await requireAdminToken();
 
-  const existing = await prisma.publicReportLink.findFirst({
-    where: { reportId },
-  });
-
-  let link;
-
-  if (!existing) {
-    const publicId = randomUUID().replace(/-/g, "").slice(0, 12);
-    link = await prisma.publicReportLink.create({
-      data: {
-        reportId,
-        publicId,
-        isActive: true,
-      },
-    });
-  } else {
-    link = await prisma.publicReportLink.update({
-      where: { id: existing.id },
-      data: { isActive: true },
-    });
-  }
+  const link = await enablePublicLinkApi(token, reportId);
 
   revalidatePath(`/app/reports/${reportId}`);
   return link;
 }
 
 export async function disablePublicLink(reportId: string) {
-  await prisma.publicReportLink.updateMany({
-    where: { reportId },
-    data: { isActive: false },
-  });
+  const token = await requireAdminToken();
+
+  await disablePublicLinkApi(token, reportId);
 
   revalidatePath(`/app/reports/${reportId}`);
 }

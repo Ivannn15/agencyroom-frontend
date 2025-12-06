@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { prisma } from "../../../../lib/db";
+import { notFound, redirect } from "next/navigation";
+import { fetchProject } from "../../../../lib/admin-api";
+import { getAdminTokenFromCookies } from "../../../../lib/admin-token";
 import { deleteProject } from "./actions";
 import DeleteProjectButton from "./DeleteProjectButton";
 import { Alert } from "../../../../components/ui/Alert";
@@ -15,13 +16,21 @@ export default async function ProjectDetailsPage({ params, searchParams }: Proje
   if (!projectId) {
     notFound();
   }
-  const project = await prisma.project.findUnique({
-    where: { id: projectId },
-    include: {
-      client: true,
-      reports: { orderBy: { createdAt: "desc" } },
-    },
-  });
+
+  const token = await getAdminTokenFromCookies();
+  if (!token) {
+    redirect("/login");
+  }
+
+  let project;
+  try {
+    project = await fetchProject(token, projectId);
+  } catch (err: any) {
+    if (err?.status === 404) {
+      notFound();
+    }
+    throw err;
+  }
 
   if (!project) {
     notFound();
@@ -40,6 +49,7 @@ export default async function ProjectDetailsPage({ params, searchParams }: Proje
       : "Завершен";
 
   const deleteProjectAction = deleteProject.bind(null, project.id);
+  const projectReports = project.reports ?? [];
 
   return (
     <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
@@ -90,11 +100,11 @@ export default async function ProjectDetailsPage({ params, searchParams }: Proje
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-slate-900">Отчеты по проекту</h2>
           </div>
-          {project.reports.length === 0 ? (
+          {projectReports.length === 0 ? (
             <p className="text-xs text-slate-500">По этому проекту пока нет отчетов.</p>
           ) : (
             <div className="divide-y divide-slate-100 text-sm">
-              {project.reports.map((report) => (
+              {projectReports.map((report) => (
                 <div key={report.id} className="py-3 flex items-start justify-between gap-4 transition hover:bg-slate-50 rounded-lg px-2 -mx-2">
                   <div>
                     <div className="font-medium text-slate-900">{project.name}</div>

@@ -1,13 +1,17 @@
-import { prisma } from "../../../lib/db";
+import { redirect } from "next/navigation";
+import { fetchClients, fetchProjects } from "../../../lib/admin-api";
+import { getAdminTokenFromCookies } from "../../../lib/admin-token";
 import ProjectsPageClient from "./ProjectsPageClient";
 
 export default async function ProjectsPage() {
+  const token = await getAdminTokenFromCookies();
+  if (!token) {
+    redirect("/login");
+  }
+
   const [projects, clients] = await Promise.all([
-    prisma.project.findMany({
-      include: { client: true },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.client.findMany({ orderBy: { createdAt: "desc" } }),
+    fetchProjects(token),
+    fetchClients(token),
   ]);
 
   const projectsForUi = projects.map((p) => ({

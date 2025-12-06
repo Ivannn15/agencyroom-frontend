@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { prisma } from "../../../../lib/db";
+import { createClient as createClientApi } from "../../../../lib/admin-api";
+import { requireAdminToken } from "../../../../lib/admin-token";
 
 export async function createClient(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
@@ -13,18 +14,12 @@ export async function createClient(formData: FormData) {
     throw new Error("Name and email are required");
   }
 
-  const agency = await prisma.agency.findFirst();
-  if (!agency) {
-    throw new Error("No agency found");
-  }
+  const token = await requireAdminToken();
 
-  const client = await prisma.client.create({
-    data: {
-      name,
-      company,
-      contactEmail: email,
-      agencyId: agency.id,
-    },
+  const client = await createClientApi(token, {
+    name,
+    company,
+    contactEmail: email,
   });
 
   revalidatePath("/app");

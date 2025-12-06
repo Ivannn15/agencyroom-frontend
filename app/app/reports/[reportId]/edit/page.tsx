@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
-import { prisma } from "../../../../../lib/db";
+import { notFound, redirect } from "next/navigation";
+import { fetchReport } from "../../../../../lib/admin-api";
+import { getAdminTokenFromCookies } from "../../../../../lib/admin-token";
 import { updateReport } from "../actions";
 import ReportEditForm from "../ReportEditForm";
 
@@ -14,8 +15,16 @@ export default async function ReportEditPage({ params }: ReportEditPageProps) {
     notFound();
   }
 
-  const report = await prisma.report.findUnique({
-    where: { id: reportId },
+  const token = await getAdminTokenFromCookies();
+  if (!token) {
+    redirect("/login");
+  }
+
+  const report = await fetchReport(token, reportId).catch((err: any) => {
+    if (err?.status === 404) {
+      notFound();
+    }
+    throw err;
   });
 
   if (!report) {

@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Agency, User } from "../../lib/types";
-import { loginRequest, LoginPayload, LoginResponse } from "../../lib/client-api";
+import { LoginPayload, LoginResponse } from "../../lib/client-api";
 
 type AuthState = {
   token: string;
@@ -30,6 +30,15 @@ export function ClientAuthProvider({ children }: { children: React.ReactNode }) 
   const [state, setState] = useState<AuthState | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const persistState = useCallback((next: AuthState | null) => {
+    if (typeof window === "undefined") return;
+    if (next) {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    } else {
+      window.localStorage.removeItem(STORAGE_KEY);
+    }
+  }, []);
+
   useEffect(() => {
     const raw = typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY) : null;
     if (raw) {
@@ -43,18 +52,45 @@ export function ClientAuthProvider({ children }: { children: React.ReactNode }) 
     setLoading(false);
   }, []);
 
-  const persistState = useCallback((next: AuthState | null) => {
+  useEffect(() => {
+    if (loading) return;
+    if (state) return;
     if (typeof window === "undefined") return;
-    if (next) {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } else {
-      window.localStorage.removeItem(STORAGE_KEY);
-    }
-  }, []);
+    if (!window.location.pathname.startsWith("/client")) return;
+
+    let cancelled = false;
+    const restore = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/client/auth/session", { method: "GET" });
+        if (!res.ok) return;
+        const data = (await res.json()) as LoginResponse;
+        const nextState: AuthState = {
+          token: data.accessToken,
+          user: data.user,
+          agency: data.agency,
+        };
+        if (!cancelled) {
+          setState(nextState);
+          persistState(nextState);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    restore();
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, persistState, state]);
 
   const logout = useCallback(() => {
     setState(null);
     persistState(null);
+    fetch("/api/client/auth/logout", { method: "POST" }).catch(() => undefined);
     router.push("/client/login");
   }, [persistState, router]);
 
@@ -62,18 +98,31 @@ export function ClientAuthProvider({ children }: { children: React.ReactNode }) 
     async (payload: LoginPayload) => {
       setLoading(true);
       try {
-        const res = await loginRequest(payload);
-        if (res.user.role !== "client") {
+        const res = await fetch("/api/client/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = (await res.json()) as LoginResponse;
+
+        if (!res.ok) {
+          const message = (data as any)?.message;
+          throw new Error(message || "login-failed");
+        }
+
+        if (data.user.role !== "client") {
           throw new Error("not-client");
         }
+
         const nextState: AuthState = {
-          token: res.accessToken,
-          user: res.user,
-          agency: res.agency,
+          token: data.accessToken,
+          user: data.user,
+          agency: data.agency,
         };
         setState(nextState);
         persistState(nextState);
-        return res;
+        return data;
       } finally {
         setLoading(false);
       }

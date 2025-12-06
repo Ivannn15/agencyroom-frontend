@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { prisma } from "../../../../lib/db";
+import { deleteProject as deleteProjectApi, fetchProject, updateProject as updateProjectApi } from "../../../../lib/admin-api";
+import { requireAdminToken } from "../../../../lib/admin-token";
 
 export async function updateProject(projectId: string, formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
@@ -17,15 +18,21 @@ export async function updateProject(projectId: string, formData: FormData) {
     throw new Error("Name and clientId are required");
   }
 
-  await prisma.project.update({
-    where: { id: projectId },
-    data: {
+  const token = await requireAdminToken();
+
+  try {
+    await updateProjectApi(token, projectId, {
       name,
       clientId,
       status,
       notes,
-    },
-  });
+    });
+  } catch (err: any) {
+    if (err?.status === 404) {
+      redirect("/app/projects");
+    }
+    throw err;
+  }
 
   revalidatePath("/app");
   revalidatePath("/app/projects");
@@ -36,21 +43,25 @@ export async function updateProject(projectId: string, formData: FormData) {
 }
 
 export async function deleteProject(projectId: string) {
-  const project = await prisma.project.findUnique({
-    where: { id: projectId },
-    include: { client: true },
-  });
-
-  if (!project) {
-    redirect("/app/projects");
+  const token = await requireAdminToken();
+  let project;
+  try {
+    project = await fetchProject(token, projectId);
+  } catch (err: any) {
+    if (err?.status === 404) {
+      redirect("/app/projects");
+    }
+    throw err;
   }
 
-  const reportsCount = await prisma.report.count({ where: { projectId } });
-  if (reportsCount > 0) {
-    redirect(`/app/projects/${projectId}?error=hasReports`);
+  try {
+    await deleteProjectApi(token, projectId);
+  } catch (err: any) {
+    if (err?.status === 400) {
+      redirect(`/app/projects/${projectId}?error=hasReports`);
+    }
+    throw err;
   }
-
-  await prisma.project.delete({ where: { id: projectId } });
 
   revalidatePath("/app");
   revalidatePath("/app/projects");

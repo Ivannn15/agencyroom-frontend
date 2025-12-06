@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { prisma } from "../../../../lib/db";
+import { createReport as createReportApi, fetchProject } from "../../../../lib/admin-api";
+import { requireAdminToken } from "../../../../lib/admin-token";
 
 export async function createReport(formData: FormData) {
   const projectId = String(formData.get("projectId") ?? "").trim();
@@ -21,36 +22,39 @@ export async function createReport(formData: FormData) {
     throw new Error("projectId, period and summary are required");
   }
 
-  const project = await prisma.project.findUnique({ where: { id: projectId } });
-  if (!project) {
-    throw new Error("Project not found");
-  }
+  const token = await requireAdminToken();
+  const project = await fetchProject(token, projectId).catch((err: any) => {
+    if (err?.status === 404) {
+      throw new Error("Project not found");
+    }
+    throw err;
+  });
 
-  const report = await prisma.report.create({
-    data: {
-      projectId,
-      period,
-      summary,
-      spend: spend ? Number(spend) : null,
-      revenue: revenue ? Number(revenue) : null,
-      leads: leads ? Number(leads) : null,
-      cpa: cpa ? Number(cpa) : null,
-      roas: roas ? Number(roas) : null,
-      whatWasDone:
-        whatWasDoneRaw.length > 0
-          ? whatWasDoneRaw.split("\n").map((s) => s.trim()).filter(Boolean)
-          : null,
-      nextPlan:
-        nextPlanRaw.length > 0
-          ? nextPlanRaw.split("\n").map((s) => s.trim()).filter(Boolean)
-          : null,
-    },
+  const report = await createReportApi(token, {
+    projectId,
+    period,
+    summary,
+    spend: spend ? Number(spend) : null,
+    revenue: revenue ? Number(revenue) : null,
+    leads: leads ? Number(leads) : null,
+    cpa: cpa ? Number(cpa) : null,
+    roas: roas ? Number(roas) : null,
+    whatWasDone:
+      whatWasDoneRaw.length > 0
+        ? whatWasDoneRaw.split("\n").map((s) => s.trim()).filter(Boolean)
+        : null,
+    nextPlan:
+      nextPlanRaw.length > 0
+        ? nextPlanRaw.split("\n").map((s) => s.trim()).filter(Boolean)
+        : null,
   });
 
   revalidatePath("/app");
   revalidatePath("/app/reports");
   revalidatePath(`/app/projects/${projectId}`);
-  revalidatePath(`/app/clients/${project.clientId}`);
+  if (project?.clientId) {
+    revalidatePath(`/app/clients/${project.clientId}`);
+  }
 
   redirect(`/app/reports/${report.id}`);
 }

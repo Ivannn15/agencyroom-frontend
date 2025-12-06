@@ -7,6 +7,10 @@ export class UpdateProjectDto {
   name?: string;
 
   @IsOptional()
+  @IsString()
+  clientId?: string;
+
+  @IsOptional()
   @IsEnum(ProjectStatus)
   status?: ProjectStatus;
 

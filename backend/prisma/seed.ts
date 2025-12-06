@@ -3,7 +3,18 @@ import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
-const mockClients = [
+const DEMO_PASSWORD = 'password123';
+
+const agencyData = {
+  id: 'agency_demo',
+  name: 'Demo Agency',
+  slug: 'demo-agency',
+  primaryEmail: 'demo@agency.com',
+  timezone: 'Europe/Moscow',
+  currency: 'RUB'
+};
+
+const clientsData = [
   {
     id: 'client_alpha',
     name: 'Alpha Retail',
@@ -18,107 +29,132 @@ const mockClients = [
   }
 ];
 
-const mockProjects = [
-  { id: 'project_alpha_ads', clientId: 'client_alpha', name: 'Search Ads', status: ProjectStatus.active },
-  { id: 'project_beta_social', clientId: 'client_beta', name: 'Social Campaign', status: ProjectStatus.paused }
+const projectsData = [
+  { id: 'project_alpha_ads', clientId: 'client_alpha', name: 'Search Ads', status: ProjectStatus.active, notes: 'Seeded project' },
+  { id: 'project_beta_social', clientId: 'client_beta', name: 'Social Campaign', status: ProjectStatus.paused, notes: 'Seeded project' }
 ];
 
-const mockReports = [
+const reportsData = [
   {
     id: 'report_alpha_jan',
-    clientId: 'client_alpha',
     projectId: 'project_alpha_ads',
     period: '2025-01',
     summary: 'January performance summary',
+    status: ReportStatus.published,
+    publishedAt: new Date('2025-02-01T00:00:00.000Z'),
     spend: 12000,
     revenue: 42000,
     leads: 180,
     cpa: 66.6,
     roas: 3.5,
     whatWasDone: ['Optimized keywords', 'Launched new ad groups'],
-    nextPlan: ['Test remarketing', 'Expand to new regions']
+    nextPlan: ['Test remarketing', 'Expand to new regions'],
+    publicId: 'pub_report_alpha_jan'
   },
   {
     id: 'report_beta_jan',
-    clientId: 'client_beta',
     projectId: 'project_beta_social',
     period: '2025-01',
     summary: 'January social performance',
+    status: ReportStatus.published,
+    publishedAt: new Date('2025-02-02T00:00:00.000Z'),
     spend: 8000,
     revenue: 24000,
     leads: 90,
     cpa: 88.8,
     roas: 3.0,
     whatWasDone: ['Refreshed creatives', 'Adjusted targeting'],
-    nextPlan: ['Introduce video ads', 'A/B test headlines']
+    nextPlan: ['Introduce video ads', 'A/B test headlines'],
+    publicId: 'pub_report_beta_jan'
   }
 ];
 
 async function main() {
-  await prisma.publicReportLink.deleteMany();
-  await prisma.report.deleteMany();
-  await prisma.project.deleteMany();
-  await prisma.client.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.agency.deleteMany();
+  const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
 
-  const agency = await prisma.agency.create({
-    data: {
-      id: 'agency_demo',
-      name: 'Demo Agency',
-      slug: 'demo-agency',
-      primaryEmail: 'demo@agency.com',
-      timezone: 'Europe/Moscow',
-      currency: 'RUB'
-    }
+  await prisma.agency.upsert({
+    where: { slug: agencyData.slug },
+    update: {
+      name: agencyData.name,
+      primaryEmail: agencyData.primaryEmail,
+      timezone: agencyData.timezone,
+      currency: agencyData.currency
+    },
+    create: agencyData
   });
 
-  const passwordHash = await bcrypt.hash('password123', 10);
-
-  await prisma.user.create({
-    data: {
+  await prisma.user.upsert({
+    where: { email: 'demo@agency.com' },
+    update: {
+      name: 'Demo Owner',
+      role: UserRole.owner,
+      agencyId: agencyData.id,
+      passwordHash
+    },
+    create: {
       id: 'user_demo',
       email: 'demo@agency.com',
       name: 'Demo Owner',
       role: UserRole.owner,
-      agencyId: agency.id,
+      agencyId: agencyData.id,
       passwordHash
     }
   });
 
-  for (const client of mockClients) {
-    await prisma.client.create({
-      data: {
-        id: client.id,
-        agencyId: agency.id,
+  for (const client of clientsData) {
+    await prisma.client.upsert({
+      where: { id: client.id },
+      update: {
         name: client.name,
         company: client.company,
         contactEmail: client.contactEmail
+      },
+      create: {
+        ...client,
+        agencyId: agencyData.id
       }
     });
   }
 
-  for (const project of mockProjects) {
-    await prisma.project.create({
-      data: {
-        id: project.id,
-        clientId: project.clientId,
+  for (const project of projectsData) {
+    await prisma.project.upsert({
+      where: { id: project.id },
+      update: {
         name: project.name,
         status: project.status,
-        notes: 'Seeded project'
+        notes: project.notes,
+        clientId: project.clientId
+      },
+      create: {
+        ...project
       }
     });
   }
 
-  for (const report of mockReports) {
-    await prisma.report.create({
-      data: {
+  for (const report of reportsData) {
+    await prisma.report.upsert({
+      where: { id: report.id },
+      update: {
+        period: report.period,
+        summary: report.summary,
+        status: report.status,
+        publishedAt: report.publishedAt,
+        spend: report.spend,
+        revenue: report.revenue,
+        leads: report.leads,
+        cpa: report.cpa,
+        roas: report.roas,
+        whatWasDone: report.whatWasDone,
+        nextPlan: report.nextPlan,
+        projectId: report.projectId
+      },
+      create: {
         id: report.id,
         projectId: report.projectId,
         period: report.period,
         summary: report.summary,
-        status: ReportStatus.published,
-        publishedAt: new Date(),
+        status: report.status,
+        publishedAt: report.publishedAt,
         spend: report.spend,
         revenue: report.revenue,
         leads: report.leads,
@@ -128,30 +164,40 @@ async function main() {
         nextPlan: report.nextPlan
       }
     });
-  }
 
-  const clientUserPasswordHash = await bcrypt.hash('password123', 10);
-  await prisma.user.create({
-    data: {
-      id: 'user_client_alpha',
-      email: 'client@alpharetail.com',
-      name: 'Client Alpha',
-      role: UserRole.client,
-      agencyId: agency.id,
-      clientId: 'client_alpha',
-      passwordHash: clientUserPasswordHash
-    }
-  });
-
-  for (const report of mockReports) {
-    await prisma.publicReportLink.create({
-      data: {
+    await prisma.publicReportLink.upsert({
+      where: { reportId: report.id },
+      update: {
+        isActive: true,
+        publicId: report.publicId
+      },
+      create: {
         reportId: report.id,
-        publicId: `pub_${report.id}`,
+        publicId: report.publicId,
         isActive: true
       }
     });
   }
+
+  await prisma.user.upsert({
+    where: { email: 'client@alpharetail.com' },
+    update: {
+      name: 'Client Alpha',
+      role: UserRole.client,
+      agencyId: agencyData.id,
+      clientId: 'client_alpha',
+      passwordHash
+    },
+    create: {
+      id: 'user_client_alpha',
+      email: 'client@alpharetail.com',
+      name: 'Client Alpha',
+      role: UserRole.client,
+      agencyId: agencyData.id,
+      clientId: 'client_alpha',
+      passwordHash
+    }
+  });
 }
 
 main()

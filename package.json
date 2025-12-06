@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "prisma:seed": "prisma db seed"
+    "db:generate": "prisma generate --schema backend/prisma/schema.prisma",
+    "db:migrate:dev": "prisma migrate dev --schema backend/prisma/schema.prisma",
+    "db:push": "prisma db push --schema backend/prisma/schema.prisma",
+    "db:seed": "prisma db seed --schema backend/prisma/schema.prisma",
+    "db:reset": "prisma migrate reset --force --schema backend/prisma/schema.prisma"
   },
   "dependencies": {
     "@prisma/client": "^5.14.0",
@@ -28,6 +32,6 @@
     "typescript": "^5"
   },
   "prisma": {
-    "seed": "ts-node --project tsconfig.seed.json prisma/seed.ts"
+    "seed": "ts-node --project tsconfig.seed.json backend/prisma/seed.ts"
   }
 }

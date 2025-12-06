@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ProjectStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -34,7 +34,10 @@ export class ProjectsService {
   async findOne(id: string, agencyId: string) {
     const project = await this.prisma.project.findFirst({
       where: { id, client: { agencyId } },
-      include: { client: true }
+      include: {
+        client: true,
+        reports: { orderBy: { createdAt: 'desc' } }
+      }
     });
 
     if (!project) {
@@ -46,9 +49,28 @@ export class ProjectsService {
 
   async update(id: string, agencyId: string, dto: UpdateProjectDto) {
     await this.ensureProjectAccess(id, agencyId);
+    if (dto.clientId) {
+      await this.ensureClientAccess(dto.clientId, agencyId);
+    }
     return this.prisma.project.update({
       where: { id },
       data: dto
+    });
+  }
+
+  async delete(id: string, agencyId: string) {
+    await this.ensureProjectAccess(id, agencyId);
+
+    const reportsCount = await this.prisma.report.count({
+      where: { projectId: id }
+    });
+
+    if (reportsCount > 0) {
+      throw new BadRequestException('Project has reports, remove them first');
+    }
+
+    return this.prisma.project.delete({
+      where: { id }
     });
   }
 

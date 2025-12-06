@@ -1,22 +1,34 @@
-import { prisma } from "../../lib/db";
+import { redirect } from "next/navigation";
+import { fetchClients, fetchProjects, fetchReports } from "../../lib/admin-api";
+import { getAdminTokenFromCookies } from "../../lib/admin-token";
 
 export default async function AppDashboardPage() {
-  const [clientsCount, projects, reports] = await Promise.all([
-    prisma.client.count(),
-    prisma.project.findMany({ select: { status: true } }),
-    prisma.report.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      include: {
-        project: {
-          include: { client: true },
-        },
-      },
-    }),
-  ]);
+  const token = await getAdminTokenFromCookies();
+  if (!token) {
+    redirect("/login");
+  }
 
+  let clients;
+  let projects;
+  let reportsData;
+
+  try {
+    [clients, projects, reportsData] = await Promise.all([
+      fetchClients(token),
+      fetchProjects(token),
+      fetchReports(token, { page: 1, pageSize: 5 }),
+    ]);
+  } catch (err: any) {
+    if (err?.status === 401 || err?.status === 403) {
+      redirect("/login");
+    }
+    throw err;
+  }
+
+  const clientsCount = clients.length;
   const activeProjects = projects.filter((p) => p.status === "active").length;
-  const reportsCount = await prisma.report.count();
+  const reports = reportsData.items ?? [];
+  const reportsCount = reportsData.total ?? reports.length;
 
   return (
     <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-8">

@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { prisma } from "../../../../lib/db";
+import { createProject as createProjectApi } from "../../../../lib/admin-api";
+import { requireAdminToken } from "../../../../lib/admin-token";
 
 export async function createProject(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
@@ -14,13 +15,13 @@ export async function createProject(formData: FormData) {
     throw new Error("Name and client are required");
   }
 
-  const project = await prisma.project.create({
-    data: {
-      name,
-      clientId,
-      status,
-      notes,
-    },
+  const token = await requireAdminToken();
+
+  const project = await createProjectApi(token, {
+    name,
+    clientId,
+    status,
+    notes,
   });
 
   revalidatePath("/app");

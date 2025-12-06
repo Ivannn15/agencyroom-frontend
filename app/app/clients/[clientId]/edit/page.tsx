@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
-import { prisma } from "../../../../../lib/db";
+import { notFound, redirect } from "next/navigation";
+import { fetchClient } from "../../../../../lib/admin-api";
+import { getAdminTokenFromCookies } from "../../../../../lib/admin-token";
 import ClientEditForm from "../ClientEditForm";
 import { updateClient } from "../actions";
 
@@ -14,9 +15,20 @@ export default async function ClientEditPage({ params }: ClientEditPageProps) {
     notFound();
   }
 
-  const client = await prisma.client.findUnique({
-    where: { id: clientId },
-  });
+  const token = await getAdminTokenFromCookies();
+  if (!token) {
+    redirect("/login");
+  }
+
+  let client;
+  try {
+    client = await fetchClient(token, clientId);
+  } catch (err: any) {
+    if (err?.status === 404) {
+      notFound();
+    }
+    throw err;
+  }
 
   if (!client) {
     notFound();
