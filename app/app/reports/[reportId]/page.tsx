@@ -85,7 +85,7 @@ export default async function ReportDetailsPage({ params }: ReportPageProps) {
             <div className="space-y-1 text-left md:text-right">
               <div className="text-xs text-slate-500">Публичная ссылка для клиента</div>
               <div className="text-xs font-mono text-slate-700 break-all bg-slate-50 rounded px-2 py-1">
-                /c/{publicLink.publicId}
+                {`${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/c/${publicLink.publicId}`}
               </div>
               <form action={disablePublicLinkAction}>
                 <button

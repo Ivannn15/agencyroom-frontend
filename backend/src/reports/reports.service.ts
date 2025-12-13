@@ -213,6 +213,53 @@ export class ReportsService {
     return report;
   }
 
+  async findPublic(publicId: string) {
+    if (!publicId) return null;
+    const link = await this.prisma.publicReportLink.findFirst({
+      where: { publicId, isActive: true },
+      include: {
+        report: {
+          include: {
+            project: {
+              include: { client: true }
+            }
+          }
+        }
+      }
+    });
+
+    if (!link || !link.report) {
+      return null;
+    }
+
+    const report = link.report;
+    return {
+      id: report.id,
+      period: report.period,
+      summary: report.summary,
+      spend: report.spend,
+      revenue: report.revenue,
+      leads: report.leads,
+      cpa: report.cpa,
+      roas: report.roas,
+      status: report.status,
+      whatWasDone: report.whatWasDone,
+      nextPlan: report.nextPlan,
+      project: {
+        id: report.projectId,
+        name: report.project?.name,
+        status: report.project?.status,
+        client: {
+          id: report.project?.clientId,
+          name: report.project?.client?.name,
+          company: report.project?.client?.company
+        }
+      },
+      publishedAt: report.publishedAt,
+      publicId: link.publicId
+    };
+  }
+
   async update(id: string, agencyId: string, dto: UpdateReportDto) {
     await this.ensureReportAccess(id, agencyId);
     return this.prisma.report.update({
