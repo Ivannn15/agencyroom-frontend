@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Res, UseGuards, StreamableFile } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { ReportsService } from './reports.service';
 import { CreateReportDto } from './dto/create-report.dto';
@@ -9,6 +9,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { AuthUser } from '../common/interfaces/auth-user.interface';
 import { ExportFormatDto } from './dto/export-format.dto';
+import { Response } from 'express';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.owner, UserRole.manager)
@@ -84,13 +85,17 @@ export class ReportsController {
   }
 
   @Get(':id/export')
-  export(
+  async export(
     @Param('id') id: string,
     @Query() query: ExportFormatDto,
-    @CurrentUser() user: AuthUser
+    @CurrentUser() user: AuthUser,
+    @Res({ passthrough: true }) res: Response
   ) {
     const safeFormat: 'pdf' | 'docx' = query.format === 'docx' ? 'docx' : 'pdf';
-    return this.reportsService.export(id, user.agencyId, safeFormat);
+    const file = await this.reportsService.export(id, user.agencyId, safeFormat);
+    res.setHeader('Content-Type', file.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${file.filename}"`);
+    return new StreamableFile(file.buffer);
   }
 
   @Post(':id/public-link')

@@ -1,12 +1,18 @@
 import { randomUUID } from 'crypto';
+import { Buffer } from 'buffer';
+import { existsSync } from 'fs';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, ReportStatus } from '@prisma/client';
+import PDFDocument from 'pdfkit';
+import { AlignmentType, Document, HeadingLevel, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType } from 'docx';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateReportDto } from './dto/create-report.dto';
 import { UpdateReportDto } from './dto/update-report.dto';
 
 @Injectable()
 export class ReportsService {
+  private fontPath?: string | null;
+
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateReportDto, agencyId: string) {
@@ -27,6 +33,120 @@ export class ReportsService {
         nextPlan: dto.nextPlan
       }
     });
+  }
+
+  private async buildDocxBuffer(
+    report: Prisma.ReportGetPayload<{ include: { project: { include: { client: true } }; publicLink: true } }>
+  ) {
+    const done = this.normalizeStringArray(report.whatWasDone);
+    const plan = this.normalizeStringArray(report.nextPlan);
+    const metrics = [
+      ['Spend', report.spend],
+      ['Revenue', report.revenue],
+      ['Leads', report.leads],
+      ['CPA', report.cpa],
+      ['ROAS', report.roas]
+    ]
+      .filter(([, value]) => value !== null && value !== undefined)
+      .map(([label, value]) => `${label}: ${value}`);
+
+    const clientName = report.project?.client?.company ?? report.project?.client?.name ?? 'Клиент';
+    const projectName = report.project?.name ?? 'Проект';
+
+    const paragraphs: Paragraph[] = [];
+    type HeadingValue = (typeof HeadingLevel)[keyof typeof HeadingLevel];
+    const addHeading = (text: string, level: HeadingValue = HeadingLevel.HEADING_2) => {
+      paragraphs.push(
+        new Paragraph({
+          text,
+          heading: level,
+          spacing: { after: 200 }
+        })
+      );
+    };
+
+    paragraphs.push(
+      new Paragraph({
+        text: `Отчет: ${projectName}`,
+        heading: HeadingLevel.TITLE
+      })
+    );
+    paragraphs.push(
+      new Paragraph({
+        text: `Клиент: ${clientName}`,
+        spacing: { after: 100 }
+      })
+    );
+    paragraphs.push(
+      new Paragraph({
+        text: `Период: ${report.period}`,
+        spacing: { after: 200 }
+      })
+    );
+
+    addHeading('Резюме');
+    paragraphs.push(
+      new Paragraph({
+        text: report.summary || '—',
+        spacing: { after: 200 }
+      })
+    );
+
+    if (metrics.length) {
+      addHeading('Метрики');
+      metrics.forEach((m) =>
+        paragraphs.push(
+          new Paragraph({
+            children: [new TextRun({ text: `• ${m}` })],
+            spacing: { after: 100 }
+          })
+        )
+      );
+    }
+
+    if (done.length) {
+      addHeading('Что сделано');
+      done.forEach((item, idx) =>
+        paragraphs.push(
+          new Paragraph({
+            children: [new TextRun({ text: `${idx + 1}. ${item}` })],
+            spacing: { after: 100 }
+          })
+        )
+      );
+    }
+
+    if (plan.length) {
+      addHeading('План');
+      plan.forEach((item, idx) =>
+        paragraphs.push(
+          new Paragraph({
+            children: [new TextRun({ text: `${idx + 1}. ${item}` })],
+            spacing: { after: 100 }
+          })
+        )
+      );
+    }
+
+    const doc = new Document({
+      sections: [
+        {
+          properties: {
+            page: {
+              margin: {
+                top: 720,
+                right: 720,
+                bottom: 720,
+                left: 720
+              }
+            }
+          },
+          children: paragraphs
+        }
+      ]
+    });
+
+    return await Packer.toBuffer(doc);
   }
 
   findAll(
@@ -221,17 +341,30 @@ export class ReportsService {
   }
 
   async export(id: string, agencyId: string, format: 'pdf' | 'docx') {
-    await this.ensureReportAccess(id, agencyId);
+    const report = await this.findOne(id, agencyId);
 
     if (format !== 'pdf' && format !== 'docx') {
       throw new BadRequestException('Unsupported export format');
     }
 
+    const filenameBase = this.makeSafeFilename(
+      `${report.project?.client?.company ?? report.project?.client?.name ?? 'client'}-${report.project?.name ?? 'project'}-${report.period}`
+    );
+
+    if (format === 'pdf') {
+      const buffer = await this.buildPdfBuffer(report);
+      return {
+        buffer,
+        filename: `${filenameBase}.pdf`,
+        contentType: 'application/pdf'
+      };
+    }
+
+    const buffer = await this.buildDocxBuffer(report);
     return {
-      reportId: id,
-      format,
-      status: 'stub' as const,
-      message: 'Export is not implemented yet, this is a placeholder endpoint.'
+      buffer,
+      filename: `${filenameBase}.docx`,
+      contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     };
   }
 
@@ -281,5 +414,155 @@ export class ReportsService {
     }
 
     return where;
+  }
+
+  private makeSafeFilename(name: string) {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 80) || 'report';
+  }
+
+  private async buildPdfBuffer(
+    report: Prisma.ReportGetPayload<{ include: { project: { include: { client: true } }; publicLink: true } }>
+  ): Promise<Buffer> {
+    const doc = new PDFDocument({ size: 'A4', margin: 50 });
+    const fontPath = this.getFontPath();
+    if (fontPath) {
+      doc.font(fontPath);
+    }
+
+    const chunks: Buffer[] = [];
+    doc.on('data', (c) => chunks.push(c));
+
+    const done = this.normalizeStringArray(report.whatWasDone);
+    const plan = this.normalizeStringArray(report.nextPlan);
+
+    const metrics = [
+      ['Spend', report.spend],
+      ['Revenue', report.revenue],
+      ['Leads', report.leads],
+      ['CPA', report.cpa],
+      ['ROAS', report.roas]
+    ]
+      .filter(([, value]) => value !== null && value !== undefined)
+      .map(([label, value]) => `${label}: ${value}`);
+
+    const clientName = report.project?.client?.company ?? report.project?.client?.name ?? 'Клиент';
+    const projectName = report.project?.name ?? 'Проект';
+
+    type HeadingValue = (typeof HeadingLevel)[keyof typeof HeadingLevel];
+
+    const addSection = (title: string, lines: string[], ordered = false) => {
+      doc.fontSize(14).text(title, { underline: true });
+      doc.moveDown(0.2);
+      lines.forEach((line, idx) => {
+        const prefix = ordered ? `${idx + 1}. ` : '• ';
+        doc.fontSize(12).text(`${prefix}${line}`, { lineGap: 4 });
+      });
+      doc.moveDown(0.8);
+    };
+
+    doc.fontSize(18).text(projectName, { underline: true });
+    doc.moveDown(0.2);
+    doc.fontSize(12).text(`Клиент: ${clientName}`);
+    doc.text(`Период: ${report.period}`);
+    doc.moveDown(0.8);
+
+    addSection('Резюме', [report.summary || '—'], false);
+
+    if (metrics.length) {
+      addSection('Метрики', metrics, false);
+    }
+
+    if (done.length) {
+      addSection('Что сделано', done, true);
+    }
+
+    if (plan.length) {
+      addSection('План', plan, true);
+    }
+
+    doc.end();
+    await new Promise<void>((resolve, reject) => {
+      doc.on('end', resolve);
+      doc.on('error', reject);
+    });
+
+    return Buffer.concat(chunks);
+  }
+
+  private buildLines(
+    report: Prisma.ReportGetPayload<{ include: { project: { include: { client: true } }; publicLink: true } }>
+  ) {
+    const clientName = report.project?.client?.company ?? report.project?.client?.name ?? 'Клиент';
+    const projectName = report.project?.name ?? 'Проект';
+    const lines = [
+      `Отчет: ${projectName}`,
+      `Клиент: ${clientName}`,
+      `Период: ${report.period}`,
+      '',
+      'Резюме',
+      '────────────',
+      report.summary || '—',
+      ''
+    ];
+
+    const metrics = [
+      ['Spend', report.spend],
+      ['Revenue', report.revenue],
+      ['Leads', report.leads],
+      ['CPA', report.cpa],
+      ['ROAS', report.roas]
+    ]
+      .filter(([, value]) => value !== null && value !== undefined)
+      .map(([label, value]) => `${label}: ${value}`);
+
+    if (metrics.length) {
+      lines.push('Метрики', '────────────', ...metrics, '');
+    }
+
+    const done = this.normalizeStringArray(report.whatWasDone);
+    if (done.length) {
+      lines.push('Что сделано', '────────────', ...done.map((item, idx) => `${idx + 1}. ${item}`), '');
+    }
+
+    const plan = this.normalizeStringArray(report.nextPlan);
+    if (plan.length) {
+      lines.push('План', '────────────', ...plan.map((item, idx) => `${idx + 1}. ${item}`), '');
+    }
+
+    return lines;
+  }
+
+  private normalizeStringArray(value: unknown): string[] {
+    if (!value) return [];
+    if (Array.isArray(value)) {
+      return value.map((v) => String(v));
+    }
+    return [];
+  }
+
+  private getFontPath() {
+    if (this.fontPath !== undefined) {
+      return this.fontPath;
+    }
+
+    const candidates = [
+      '/System/Library/Fonts/Supplemental/Arial.ttf',
+      '/System/Library/Fonts/Supplemental/Times New Roman.ttf'
+    ];
+
+    for (const path of candidates) {
+      if (existsSync(path)) {
+        this.fontPath = path;
+        return this.fontPath;
+      }
+    }
+
+    this.fontPath = null;
+    return this.fontPath;
   }
 }

@@ -9,6 +9,7 @@ import { ProjectsModule } from './projects/projects.module';
 import { ReportsModule } from './reports/reports.module';
 import { ClientPortalModule } from './client-portal/client-portal.module';
 import { HealthModule } from './health/health.module';
+import { ClientInvitesModule } from './client-invites/client-invites.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { HealthModule } from './health/health.module';
     UsersModule,
     AgenciesModule,
     ClientsModule,
+    ClientInvitesModule,
     ProjectsModule,
     ReportsModule,
     ClientPortalModule,

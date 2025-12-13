@@ -56,11 +56,7 @@ export default function ReportActionsPanel({
     setLoading(true);
     try {
       const res = await exportReport(token, reportId, format);
-      setMessage(
-        res.status === "stub"
-          ? "Экспорт еще в разработке. Сейчас возвращаем заглушку, позже здесь появится файл."
-          : "Экспорт запущен."
-      );
+      setMessage(`Файл ${res.filename} скачан.`);
     } catch (err) {
       console.error(err);
       setMessage("Не удалось выполнить экспорт.");
@@ -97,9 +93,7 @@ export default function ReportActionsPanel({
         </Button>
       </div>
       {message && <div className="text-xs text-slate-600">{message}</div>}
-      <div className="text-[11px] text-slate-500">
-        Клиент видит только опубликованные отчеты в своем кабинете. Экспорт пока заглушка.
-      </div>
+      <div className="text-[11px] text-slate-500">Клиент видит только опубликованные отчеты в своем кабинете.</div>
     </div>
   );
 }

@@ -1,4 +1,6 @@
-export function getJwtTtlSeconds(token: string, fallbackSeconds = 60 * 60 * 24 * 30): number {
+const TEN_YEARS_SECONDS = 60 * 60 * 24 * 365 * 10;
+
+export function getJwtTtlSeconds(token: string, fallbackSeconds = TEN_YEARS_SECONDS): number {
   const parts = token.split(".");
   if (parts.length !== 3) {
     return fallbackSeconds;

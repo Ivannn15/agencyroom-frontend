@@ -41,6 +41,13 @@ export type ReportWithRelations = Report & {
 
 export type ProjectWithClient = Project & { client?: Client | null };
 
+export type ClientInviteResponse = {
+  inviteUrl: string;
+  expiresAt: string;
+  email: string;
+  clientId: string;
+};
+
 async function apiRequest<T>(path: string, { method = "GET", body, token }: ApiRequestOptions): Promise<T> {
   if (!token) {
     throw new Error("Missing admin token");
@@ -95,6 +102,10 @@ export function updateClient(token: string, id: string, payload: Partial<{ name:
 
 export function deleteClient(token: string, id: string) {
   return apiRequest<Client>("/clients/" + id, { method: "DELETE", token });
+}
+
+export function createClientInvite(token: string, clientId: string, payload: { email: string; expiresInDays?: number }) {
+  return apiRequest<ClientInviteResponse>(`/clients/${clientId}/invite`, { method: "POST", body: payload, token });
 }
 
 // Projects
@@ -193,9 +204,48 @@ export function disablePublicLink(token: string, id: string) {
   return apiRequest<{ count: number }>(`/reports/${id}/public-link`, { method: "DELETE", token });
 }
 
-export function exportReport(token: string, id: string, format: "pdf" | "docx" = "pdf") {
-  return apiRequest<{ reportId: string; format: string; status: string; message: string }>(
-    `/reports/${id}/export?format=${format}`,
-    { method: "GET", token }
-  );
+export async function exportReport(token: string, id: string, format: "pdf" | "docx" = "pdf") {
+  if (!token) {
+    throw new Error("Missing admin token");
+  }
+
+  const res = await fetch(`${API_URL}/reports/${id}/export?format=${format}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    const error = new Error(text || "Export failed");
+    (error as any).status = res.status;
+    throw error;
+  }
+
+  const arrayBuffer = await res.arrayBuffer();
+  const contentType = res.headers.get("Content-Type") || "application/octet-stream";
+  const disposition = res.headers.get("Content-Disposition") || "";
+  const filenameMatch = disposition.match(/filename=\"?([^\";]+)\"?/i);
+  const filename = filenameMatch?.[1] || `report-${id}.${format === "pdf" ? "pdf" : "doc"}`;
+
+  const blob = new Blob([arrayBuffer], { type: contentType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+  return { filename };
+}
+
+export function resetClientPassword(token: string, clientId: string, password: string) {
+  return apiRequest<{ clientId: string; userId: string; message: string }>(`/clients/${clientId}/reset-password`, {
+    method: "POST",
+    body: { password },
+    token
+  });
 }

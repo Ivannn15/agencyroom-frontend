@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Agency, User } from "../../lib/types";
 import { LoginPayload, LoginResponse } from "../../lib/client-api";
@@ -28,6 +28,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [state, setState] = useState<AuthState | null>(null);
   const [loading, setLoading] = useState(true);
+  const attemptedRestore = useRef(false);
 
   const persistState = useCallback((next: AuthState | null) => {
     if (typeof window === "undefined") return;
@@ -57,7 +58,9 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     if (state) return;
     if (typeof window === "undefined") return;
     if (!window.location.pathname.startsWith("/app")) return;
+    if (attemptedRestore.current) return;
 
+    attemptedRestore.current = true;
     let cancelled = false;
     const restore = async () => {
       setLoading(true);
@@ -93,6 +96,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(
     async (payload: LoginPayload) => {
       setLoading(true);
+      attemptedRestore.current = true;
       try {
         const res = await fetch("/api/auth/login", {
           method: "POST",

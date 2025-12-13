@@ -35,8 +35,9 @@ model Agency {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  users   User[]
-  clients Client[]
+  users          User[]
+  clients        Client[]
+  clientInvites  ClientInvite[]
 }
 
 model User {
@@ -53,6 +54,7 @@ model User {
 
   agency Agency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   client Client? @relation("ClientUsers", fields: [clientId], references: [id])
+  createdInvites ClientInvite[]
 
   @@index([agencyId])
   @@index([clientId])
@@ -71,8 +73,29 @@ model Client {
   agency   Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   projects Project[]
   users    User[]   @relation("ClientUsers")
+  invites  ClientInvite[]
 
   @@index([agencyId])
+}
+
+model ClientInvite {
+  id              String   @id @default(uuid())
+  tokenHash       String   @unique
+  clientId        String
+  agencyId        String
+  email           String
+  expiresAt       DateTime
+  usedAt          DateTime?
+  createdAt       DateTime @default(now())
+  createdByUserId String
+
+  client        Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  agency        Agency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  createdByUser User   @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([agencyId])
+  @@index([createdByUserId])
 }
 
 model Project {

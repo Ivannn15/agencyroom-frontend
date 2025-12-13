@@ -5,6 +5,8 @@ import { getAdminTokenFromCookies } from "../../../../lib/admin-token";
 import DeleteClientButton from "./DeleteClientButton";
 import { deleteClient } from "./actions";
 import { Alert } from "../../../../components/ui/Alert";
+import InviteClientCard from "./InviteClientCard";
+import ResetClientPasswordCard from "./ResetClientPasswordCard";
 
 type ClientPageProps = {
   params: Promise<{ clientId: string }>;
@@ -84,7 +86,7 @@ export default async function ClientDetailsPage({ params, searchParams }: Client
           >
             Редактировать
           </Link>
-        <Link
+          <Link
             href={`/app/projects/new?clientId=${client.id}`}
             className="shrink-0 inline-flex items-center rounded-lg border border-slate-300 text-slate-700 text-sm font-medium px-3 py-2 hover:bg-slate-50"
           >
@@ -95,6 +97,8 @@ export default async function ClientDetailsPage({ params, searchParams }: Client
       </div>
 
       <div className="space-y-6">
+        <InviteClientCard clientId={client.id} defaultEmail={client.contactEmail} />
+        <ResetClientPasswordCard clientId={client.id} email={client.contactEmail} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-100 transition hover:-translate-y-0.5 hover:shadow-md">
             <h2 className="text-sm font-semibold text-slate-900 mb-3">

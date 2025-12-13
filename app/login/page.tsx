@@ -10,7 +10,7 @@ import { useAdminAuth } from "../../components/admin/AdminAuthProvider";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, token, user } = useAdminAuth();
+  const { login, token, user, logout } = useAdminAuth();
   const [email, setEmail] = useState("demo@agency.com");
   const [password, setPassword] = useState("password123");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -18,9 +18,29 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (token && user && user.role !== "client") {
-      router.replace("/app");
+      let cancelled = false;
+      const verifySession = async () => {
+        // Avoid redirect loop when localStorage has a stale token but the httpOnly cookie expired.
+        try {
+          const res = await fetch("/api/auth/session");
+          if (!res.ok) {
+            logout();
+            return;
+          }
+          if (!cancelled) {
+            router.replace("/app");
+          }
+        } catch {
+          logout();
+        }
+      };
+
+      verifySession();
+      return () => {
+        cancelled = true;
+      };
     }
-  }, [router, token, user]);
+  }, [logout, router, token, user]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

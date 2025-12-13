@@ -1,22 +1,17 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
-import { UsersModule } from '../users/users.module';
-import { AgenciesModule } from '../agencies/agencies.module';
-import { JwtStrategy } from './strategies/jwt.strategy';
+import { ClientInvitesService } from './client-invites.service';
+import { ClientInvitesAdminController, ClientInvitesController } from './client-invites.controller';
 
 @Module({
   imports: [
     ConfigModule,
-    UsersModule,
-    AgenciesModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
-        const expiresIn = configService.get<string>('JWT_EXPIRES_IN') ?? '3650d';
+        const expiresIn = configService.get<string>('JWT_EXPIRES_IN') ?? '30d';
         return {
           secret: configService.get<string>('JWT_SECRET') ?? 'changeme',
           signOptions: { expiresIn }
@@ -24,7 +19,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       }
     })
   ],
-  controllers: [AuthController],
-  providers: [AuthService, JwtStrategy]
+  controllers: [ClientInvitesAdminController, ClientInvitesController],
+  providers: [ClientInvitesService]
 })
-export class AuthModule {}
+export class ClientInvitesModule {}

@@ -3,6 +3,7 @@ import { UserRole } from '@prisma/client';
 import { ClientsService } from './clients.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
+import { ResetClientPasswordDto } from './dto/reset-client-password.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -38,5 +39,14 @@ export class ClientsController {
   @Delete(':id')
   remove(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.clientsService.delete(id, user.agencyId);
+  }
+
+  @Post(':id/reset-password')
+  resetPassword(
+    @Param('id') id: string,
+    @Body() dto: ResetClientPasswordDto,
+    @CurrentUser() user: AuthUser
+  ) {
+    return this.clientsService.resetPassword(id, user.agencyId, dto.password);
   }
 }

@@ -100,11 +100,7 @@ export default function ReportsPageClient({
     setLoadingId(reportId);
     try {
       const res = await exportReport(token, reportId, format);
-      setActionMessage(
-        res.status === "stub"
-          ? "Экспорт еще в разработке. Сейчас возвращаем заглушку, позже здесь появится файл."
-          : "Экспорт запущен."
-      );
+      setActionMessage(`Файл ${res.filename} скачан.`);
     } catch (err) {
       console.error(err);
       setActionMessage("Не удалось выполнить экспорт.");

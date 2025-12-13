@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/Card";
 import { Input } from "../../../components/ui/Input";
 import { Button } from "../../../components/ui/Button";
@@ -10,7 +10,9 @@ import { useClientAuth } from "../../../components/client/ClientAuthProvider";
 export default function ClientLoginPage() {
   const router = useRouter();
   const { login, isClient, loading } = useClientAuth();
-  const [email, setEmail] = useState("client@alpharetail.com");
+  const search = useSearchParams();
+  const prefillEmail = useMemo(() => search.get("email") || "client@alpharetail.com", [search]);
+  const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState("password123");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);

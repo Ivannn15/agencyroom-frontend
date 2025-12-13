@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { useRouter } from "next/navigation";
 import { Agency, User } from "../../lib/types";
 import { LoginPayload, LoginResponse } from "../../lib/client-api";
+import { useRef } from "react";
 
 type AuthState = {
   token: string;
@@ -19,6 +20,7 @@ type ClientAuthContextValue = {
   login: (payload: LoginPayload) => Promise<LoginResponse>;
   logout: () => void;
   isClient: boolean;
+  setSessionFromResponse: (data: LoginResponse) => void;
 };
 
 const STORAGE_KEY = "client_auth_state";
@@ -29,6 +31,7 @@ export function ClientAuthProvider({ children }: { children: React.ReactNode }) 
   const router = useRouter();
   const [state, setState] = useState<AuthState | null>(null);
   const [loading, setLoading] = useState(true);
+  const attemptedRestore = useRef(false);
 
   const persistState = useCallback((next: AuthState | null) => {
     if (typeof window === "undefined") return;
@@ -52,12 +55,28 @@ export function ClientAuthProvider({ children }: { children: React.ReactNode }) 
     setLoading(false);
   }, []);
 
+  const applySession = useCallback(
+    (data: LoginResponse) => {
+      const nextState: AuthState = {
+        token: data.accessToken,
+        user: data.user,
+        agency: data.agency,
+      };
+      setState(nextState);
+      persistState(nextState);
+      setLoading(false);
+    },
+    [persistState]
+  );
+
   useEffect(() => {
     if (loading) return;
     if (state) return;
     if (typeof window === "undefined") return;
     if (!window.location.pathname.startsWith("/client")) return;
+    if (attemptedRestore.current) return;
 
+    attemptedRestore.current = true;
     let cancelled = false;
     const restore = async () => {
       setLoading(true);
@@ -92,11 +111,13 @@ export function ClientAuthProvider({ children }: { children: React.ReactNode }) 
     persistState(null);
     fetch("/api/client/auth/logout", { method: "POST" }).catch(() => undefined);
     router.push("/client/login");
+    setLoading(false);
   }, [persistState, router]);
 
   const login = useCallback(
     async (payload: LoginPayload) => {
       setLoading(true);
+      attemptedRestore.current = true;
       try {
         const res = await fetch("/api/client/auth/login", {
           method: "POST",
@@ -115,19 +136,13 @@ export function ClientAuthProvider({ children }: { children: React.ReactNode }) 
           throw new Error("not-client");
         }
 
-        const nextState: AuthState = {
-          token: data.accessToken,
-          user: data.user,
-          agency: data.agency,
-        };
-        setState(nextState);
-        persistState(nextState);
+        applySession(data);
         return data;
       } finally {
         setLoading(false);
       }
     },
-    [persistState]
+    [applySession]
   );
 
   const value = useMemo<ClientAuthContextValue>(
@@ -139,8 +154,9 @@ export function ClientAuthProvider({ children }: { children: React.ReactNode }) 
       login,
       logout,
       isClient: !!state?.user && state.user.role === "client",
+      setSessionFromResponse: applySession,
     }),
-    [loading, login, logout, state]
+    [applySession, loading, login, logout, state]
   );
 
   return <ClientAuthContext.Provider value={value}>{children}</ClientAuthContext.Provider>;

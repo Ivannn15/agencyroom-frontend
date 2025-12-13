@@ -1,4 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
@@ -63,6 +65,30 @@ export class ClientsService {
     return this.prisma.client.delete({
       where: { id }
     });
+  }
+
+  async resetPassword(id: string, agencyId: string, password: string) {
+    if (!password || password.length < 6) {
+      throw new BadRequestException('Password must be at least 6 characters');
+    }
+
+    await this.ensureClientAccess(id, agencyId);
+
+    const user = await this.prisma.user.findFirst({
+      where: { clientId: id, agencyId, role: UserRole.client }
+    });
+
+    if (!user) {
+      throw new NotFoundException('Client user not found');
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash }
+    });
+
+    return { clientId: id, userId: user.id, message: 'Password reset' };
   }
 
   private async ensureClientAccess(id: string, agencyId: string) {
